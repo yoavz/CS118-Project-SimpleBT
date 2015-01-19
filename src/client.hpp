@@ -23,17 +23,39 @@
 #define SBT_CLIENT_HPP
 
 #include "common.hpp"
+#include "meta-info.hpp"
 
 namespace sbt {
 
 class Client
 {
 public:
-  Client(const std::string& port, const std::string& torrent)
-  {
-  }
-};
 
+  /*
+   * Default constructor 
+   */
+  Client(const std::string& port, const std::string& torrent);
+
+  /*
+   * Fetches the peer list from the tracker
+   * Returns 0 on success
+   */
+  int fetchPeerList() ;
+
+private:
+
+  bool debug;
+  int port; 
+  std::string torrentFile;
+  MetaInfo metaInfo;
+
+  /*
+   * Parses the torrent file into the metaInfo structure
+   * Returns 0 on success
+   */
+  int parseTorrentFile() ;
+};
+    
 } // namespace sbt
 
 #endif // SBT_CLIENT_HPP

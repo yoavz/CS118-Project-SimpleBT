@@ -35,6 +35,9 @@ main(int argc, char** argv)
 
     // Initialise the client.
     sbt::Client client(argv[1], argv[2]);
+
+    // fetch peer list
+    client.fetchPeerList();
   }
   catch (std::exception& e)
   {
