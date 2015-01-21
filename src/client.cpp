@@ -50,8 +50,6 @@ namespace sbt {
     req.setVersion("1.1");
     req.addHeader("Accept-Language", "en-US");
     
-    std::cout << req << std::endl;
-
     // get IP address
     struct addrinfo hints;
     hints.ai_family = AF_INET;
@@ -84,6 +82,4 @@ namespace sbt {
 
     return 0;
   }
-
-
 }
