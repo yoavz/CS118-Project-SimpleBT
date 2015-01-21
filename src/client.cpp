@@ -99,19 +99,14 @@ namespace sbt {
       return 4;
     }
 
-    // char buf[20] = {0};
+    // wait for the response
+    // char [20] = {0};
     // memset(buf, '\0', sizeof(buf));
-    // if (recv(sockfd, buf, 20, 0) == -1) {
-    //   perror("recv");
-    //   return 5;
-    // }
-    // std::cout << buf << std::endl;
-
-    // size_t reqLen = req.getTotalLength();
-    // char *buf = new char [reqLen];
-    //
-    // req.formatRequest(buf);
-    // std::cout << buf;
+    if (recv(sockfd, buf, 20, 0) == -1) {
+      perror("recv");
+      return 5;
+    }
+    std::cout << buf << std::endl;
 
     return 0;
   }
