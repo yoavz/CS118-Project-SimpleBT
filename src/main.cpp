@@ -33,7 +33,7 @@ main(int argc, char** argv)
       return 1;
     }
 
-    // Initialise the client.
+    // Initialize the client.
     sbt::Client client(argv[1], argv[2]);
 
     // fetch peer list

@@ -15,7 +15,8 @@ namespace sbt {
     std::string portAndPath = temp.at(1);
 
     temp = extract(portAndPath, "/");
-    this->_port = std::stoi(temp.at(0));
+    this->_portString = temp.at(0);
+    this->_port = std::stoi(this->_portString);
     this->_path = "/" + temp.at(1);
   }
 
@@ -29,6 +30,10 @@ namespace sbt {
 
   std::string Url::getPath() {
     return this->_path;
+  }
+
+  std::string Url::getPortString() {
+    return this->_portString;
   }
 
   int Url::getPort() {

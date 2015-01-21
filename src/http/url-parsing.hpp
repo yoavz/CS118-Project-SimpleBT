@@ -18,12 +18,13 @@ public:
   std::string getProtocol();
   std::string getHost();
   std::string getPath();
+  std::string getPortString();
   int getPort();
 
 private:
 
   int _port;
-  std::string _base, _protocol, _host, _path;
+  std::string _base, _protocol, _host, _path, _portString;
 
   std::vector<std::string> extract(const std::string& base, const std::string& delim);
 };
