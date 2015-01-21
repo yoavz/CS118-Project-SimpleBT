@@ -103,7 +103,7 @@ namespace sbt {
 
     HttpRequest req;
     req.setHost(announce.getHost());
-    req.setPort(80);
+    req.setPort(announce.getPort());
     req.setMethod(HttpRequest::GET);
     req.setPath(announce.serializePath());
     req.setVersion("1.1");
