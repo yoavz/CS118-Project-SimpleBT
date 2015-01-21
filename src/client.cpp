@@ -82,8 +82,6 @@ namespace sbt {
     inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
     unsigned short clientPort = clientAddr.sin_port;
     std::string clientPortString = std::to_string(clientPort);
-    announce.setParam("port", std::to_string(this->port));
-
     if (this->debug) {
       std::cout << "Set up a connection from: " << ipstr << ":" <<
         clientPort << std::endl;
@@ -97,12 +95,14 @@ namespace sbt {
       std::cout << "info hash encoded: " << hashEncoded << std::endl;
     }
     announce.setParam("info_hash", hashEncoded); 
+    announce.setParam("port", std::to_string(this->port));
     announce.setParam("peer_id", "abcdefghijklmnopqrst");
     announce.setParam("uploaded", "0");
     announce.setParam("downloaded", "0");
     announce.setParam("left", "0");
     announce.setParam("event", "started");
 
+    // serialize the HTTP request
     HttpRequest req;
     req.setHost(announce.getHost());
     req.setPort(announce.getPort());
@@ -125,15 +125,25 @@ namespace sbt {
       return 4;
     }
 
-    // wait for the response
-    // char [20] = {0};
-    // memset(buf, '\0', sizeof(buf));
-    if (recv(sockfd, buf, 20, 0) == -1) {
-      perror("recv");
-      return 5;
+    // read the response into a stream
+    std::stringstream respStream;
+    char *respBuf = new char [20];
+    bool isEnd = false;
+    int respStatus;
+    while (!isEnd) {
+      if ((respStatus = recv(sockfd, respBuf, 20, 0)) == -1) {
+        perror("recv");
+        return 5;
+      }
+      
+      // recv returns 0 on EOF
+      if (respStatus == 0)
+        isEnd = true;
+
+      respStream << respBuf;
     }
 
-    std::cout << buf << std::endl;
+    std::cout << respStream.str() << std::endl;
 
     return 0;
   }
