@@ -52,7 +52,6 @@ namespace sbt {
     
     // get IP address
     struct addrinfo hints;
-    hints.ai_family = AF_INET;
     struct addrinfo* res;
     int status;
     if ((status = getaddrinfo(announce.getHost().c_str(), 
