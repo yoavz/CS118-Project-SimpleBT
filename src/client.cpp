@@ -98,13 +98,13 @@ namespace sbt {
       return 4;
     }
 
-    char buf[20] = {0};
-    memset(buf, '\0', sizeof(buf));
-    if (recv(sockfd, buf, 20, 0) == -1) {
-      perror("recv");
-      return 5;
-    }
-    std::cout << buf << std::endl;
+    // char buf[20] = {0};
+    // memset(buf, '\0', sizeof(buf));
+    // if (recv(sockfd, buf, 20, 0) == -1) {
+    //   perror("recv");
+    //   return 5;
+    // }
+    // std::cout << buf << std::endl;
 
     // size_t reqLen = req.getTotalLength();
     // char *buf = new char [reqLen];
