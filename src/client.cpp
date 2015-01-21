@@ -52,6 +52,10 @@ namespace sbt {
     
     // get IP address
     struct addrinfo hints;
+    // prepare hints
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET; // IPv4
+    hints.ai_socktype = SOCK_STREAM;
     struct addrinfo* res;
     int status;
     if ((status = getaddrinfo(announce.getHost().c_str(), 
