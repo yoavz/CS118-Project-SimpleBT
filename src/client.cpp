@@ -41,14 +41,6 @@ namespace sbt {
     
     std::string announceString = metaInfo.getAnnounce();
     Url announce (announceString) ;
-
-    HttpRequest req;
-    req.setHost(announce.getHost());
-    req.setPort(announce.getPort());
-    req.setMethod(HttpRequest::GET);
-    req.setPath(announce.getPath());
-    req.setVersion("1.1");
-    req.addHeader("Accept-Language", "en-US");
     
     // get IP address
     struct addrinfo hints;
@@ -69,45 +61,56 @@ namespace sbt {
     struct sockaddr_in* serverAddr = (struct sockaddr_in*)res->ai_addr;
 
     // initialize and connect the socket
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (connect(sockfd, 
-                (struct sockaddr *)serverAddr, 
-                sizeof(*serverAddr)) == -1) {
-      perror("connect");
-      return 2;
-    }
-
-    // get local socket information
-    struct sockaddr_in clientAddr;
-    socklen_t clientAddrLen = sizeof(clientAddr);
-    if (getsockname(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen) == -1) {
-      perror("getsockname");
-      return 3;
-    }
-    char ipstr[INET_ADDRSTRLEN] = {'\0'};
-    inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
-    std::cout << "Set up a connection from: " << ipstr << ":" <<
-      ntohs(clientAddr.sin_port) << std::endl;
+    // int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    // if (connect(sockfd, 
+    //             (struct sockaddr *)serverAddr, 
+    //             sizeof(*serverAddr)) == -1) {
+    //   perror("connect");
+    //   return 2;
+    // }
+    //
+    // // get local socket information
+    // struct sockaddr_in clientAddr;
+    // socklen_t clientAddrLen = sizeof(clientAddr);
+    // if (getsockname(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen) == -1) {
+    //   perror("getsockname");
+    //   return 3;
+    // }
+    // char ipstr[INET_ADDRSTRLEN] = {'\0'};
+    // inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
+    // std::cout << "Set up a connection from: " << ipstr << ":" <<
+    //   ntohs(clientAddr.sin_port) << std::endl;
 
     // encode all request params
-    size_t reqLen = req.getTotalLength();
-    char *buf = new char [reqLen];
-    req.formatRequest(buf);
+    announce.setParam("what", "test");
+    announce.setParam("yoav", "klsjdfkljasdf");
+    std::cout << announce.serializePath();
+
+    // HttpRequest req;
+    // req.setHost(announce.getHost());
+    // req.setPort(announce.getPort());
+    // req.setMethod(HttpRequest::GET);
+    // req.setPath(announce.getPath());
+    // req.setVersion("1.1");
+    // req.addHeader("Accept-Language", "en-US");
+    // size_t reqLen = req.getTotalLength();
+    // char *buf = new char [reqLen];
+    // req.formatRequest(buf);
     
     // initialize a handshake and send to socket
-    if (send(sockfd, buf, reqLen, 0) == -1) {
-      perror("send");
-      return 4;
-    }
-
-    // wait for the response
-    // char [20] = {0};
-    // memset(buf, '\0', sizeof(buf));
-    if (recv(sockfd, buf, 20, 0) == -1) {
-      perror("recv");
-      return 5;
-    }
-    std::cout << buf << std::endl;
+    // if (send(sockfd, buf, reqLen, 0) == -1) {
+    //   perror("send");
+    //   return 4;
+    // }
+    //
+    // // wait for the response
+    // // char [20] = {0};
+    // // memset(buf, '\0', sizeof(buf));
+    // if (recv(sockfd, buf, 20, 0) == -1) {
+    //   perror("recv");
+    //   return 5;
+    // }
+    // std::cout << buf << std::endl;
 
     return 0;
   }

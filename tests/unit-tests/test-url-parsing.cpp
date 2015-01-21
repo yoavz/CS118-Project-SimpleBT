@@ -46,6 +46,22 @@ BOOST_AUTO_TEST_CASE(TestUrl2)
   BOOST_CHECK_EQUAL(url1.getPath(), "/index.html");
 }
 
+BOOST_AUTO_TEST_CASE(UrlParams)
+{
+  Url url1("http://www.google.com:80/index.html");
+
+  url1.setParam("blah", "value1");
+  url1.setParam("foo", "value2");
+
+  BOOST_CHECK_EQUAL(url1.getProtocol(), "http");
+  BOOST_CHECK_EQUAL(url1.getHost(), "www.google.com");
+  BOOST_CHECK_EQUAL(url1.getPort(), 80);
+  BOOST_CHECK_EQUAL(url1.getPath(), "/index.html");
+  BOOST_CHECK_EQUAL(url1.serializePath(), 
+                    "/index.html?foo=value2&blah=value1");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace sbt

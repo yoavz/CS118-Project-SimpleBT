@@ -46,8 +46,16 @@ namespace sbt {
     return 0;
   }
 
-  std::string serializePath()
+  std::string Url::serializePath()
   {
+    std::string path = this->getPath();
+
+    for (auto it = this->params.begin(); it != this->params.end(); ++it) {
+      path += ( it == this->params.begin() ? "?" : "&" );
+      path += it->first + "=" + it->second;
+    }
+
+    return path;
   }
 
   /*
