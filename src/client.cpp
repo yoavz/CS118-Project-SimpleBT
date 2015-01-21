@@ -106,6 +106,11 @@ namespace sbt {
     char *buf = new char [reqLen];
     req.formatRequest(buf);
 
+    if (this->debug) {
+      std::cout << "Sending request to server..." << std::endl;
+      std::cout << buf;
+    }
+
     // initialize a handshake and send to socket
     if (send(sockfd, buf, reqLen, 0) == -1) {
       perror("send");
