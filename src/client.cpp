@@ -82,7 +82,8 @@ namespace sbt {
     inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
     unsigned short clientPort = clientAddr.sin_port;
     std::string clientPortString = std::to_string(clientPort);
-    
+    announce.setParam("port", clientPortString);
+
     if (this->debug) {
       std::cout << "Set up a connection from: " << ipstr << ":" <<
         clientPort << std::endl;
@@ -90,12 +91,13 @@ namespace sbt {
 
     // encode all request params
     ConstBufferPtr hash = metaInfo.getHash();
-    // std::stringstream ss;
-    // hash->print(ss);
-    std::string hashEncoded = url::encode(hash->buf(), sizeof(hash->buf()));
+    const uint8_t* hashBuffer = hash->buf();
+    std::string hashEncoded = url::encode(hashBuffer, sizeof(hashBuffer));
+    if (this->debug) {
+      std::cout << "info hash encoded: " << hashEncoded << std::endl;
+    }
     announce.setParam("info_hash", hashEncoded); 
     announce.setParam("peer_id", "abcdefghijklmnopqrst");
-    announce.setParam("port", clientPortString);
     announce.setParam("uploaded", "0");
     announce.setParam("downloaded", "0");
     announce.setParam("left", "0");
