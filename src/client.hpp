@@ -54,6 +54,12 @@ private:
    * Returns 0 on success
    */
   int parseTorrentFile() ;
+
+  /*
+   * Waits for a full response (until EOF) from a socket
+   * and returns it as a string.
+   */
+  int waitForResponse(int sockfd, std::stringstream& ss);
 };
     
 } // namespace sbt

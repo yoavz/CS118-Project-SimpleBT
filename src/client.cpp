@@ -127,24 +127,34 @@ namespace sbt {
 
     // read the response into a stream
     std::stringstream respStream;
-    char *respBuf = new char [20];
-    bool isEnd = false;
-    int respStatus;
-    while (!isEnd) {
-      if ((respStatus = recv(sockfd, respBuf, 20, 0)) == -1) {
-        perror("recv");
-        return 5;
-      }
-      
-      // recv returns 0 on EOF
-      if (respStatus == 0)
-        isEnd = true;
-
-      respStream << respBuf;
-    }
+    if (waitForResponse(sockfd, respStream))
+      return 5;
 
     std::cout << respStream.str() << std::endl;
 
+    return 0;
+  }
+
+  int Client::waitForResponse(int sockfd, std::stringstream& ss)
+  {
+    char *respBuf = new char [20];
+    bool isEnd = false;
+    int status;
+
+    while (!isEnd) {
+
+      if ((status = recv(sockfd, respBuf, 20, 0)) == -1) {
+        perror("recv");
+        return 5;
+      }
+
+      // recv returns 0 on EOF
+      if (status == 0)
+        isEnd = true;
+
+      ss << respBuf;
+    }
+    
     return 0;
   }
 }
