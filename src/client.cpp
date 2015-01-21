@@ -88,9 +88,10 @@ namespace sbt {
 
     // encode all request params
     ConstBufferPtr hash = metaInfo.getHash();
-    std::stringstream ss;
-    hash->print(ss);
-    announce.setParam("info_hash", ss.str()); 
+    // std::stringstream ss;
+    // hash->print(ss);
+    std::string hashEncoded = url::encode(hash->buf(), sizeof(hash->buf()));
+    announce.setParam("info_hash", hashEncoded); 
     announce.setParam("peer_id", "abcdefghijklmnopqrst");
     std::string portString = std::to_string(ntohs(clientAddr.sin_port));
     announce.setParam("port", portString);
