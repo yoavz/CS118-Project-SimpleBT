@@ -40,7 +40,6 @@ namespace sbt {
   int Client::fetchPeerList() {
     
     std::string announceString = metaInfo.getAnnounce();
-    std::cout << announceString << std::endl;
     Url announce (announceString) ;
 
     HttpRequest req;
@@ -78,25 +77,27 @@ namespace sbt {
       return 2;
     }
 
-    // get local socket information
-    struct sockaddr_in clientAddr;
-    socklen_t clientAddrLen = sizeof(clientAddr);
-    if (getsockname(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen) == -1) {
-      perror("getsockname");
-      return 3;
-    }
-    char ipstr[INET_ADDRSTRLEN] = {'\0'};
-    inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
-    std::cout << "Set up a connection from: " << ipstr << ":" <<
-      ntohs(clientAddr.sin_port) << std::endl;
-     
-    // initialize a handshake and send to socket
-    // msg::HandShake hs;
-    // ConstBufferPtr hsBuffer = hs.encode();
-    // if (send(sockfd, &hsBuffer, 68, 0) == -1) {
-    //   perror("send");
-    //   return 4;
+    // // get local socket information
+    // struct sockaddr_in clientAddr;
+    // socklen_t clientAddrLen = sizeof(clientAddr);
+    // if (getsockname(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen) == -1) {
+    //   perror("getsockname");
+    //   return 3;
     // }
+    // char ipstr[INET_ADDRSTRLEN] = {'\0'};
+    // inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
+    // std::cout << "Set up a connection from: " << ipstr << ":" <<
+    //   ntohs(clientAddr.sin_port) << std::endl;
+     
+    size_t reqLen = req.getTotalLength();
+    char *buf = new char [reqLen];
+    req.formatRequest(buf);
+    
+    // initialize a handshake and send to socket
+    if (send(sockfd, buf, reqLen, 0) == -1) {
+      perror("send");
+      return 4;
+    }
 
     // char buf[20] = {0};
     // memset(buf, '\0', sizeof(buf));
