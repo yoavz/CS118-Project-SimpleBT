@@ -80,10 +80,12 @@ namespace sbt {
     }
     char ipstr[INET_ADDRSTRLEN] = {'\0'};
     inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
+    unsigned short clientPort = clientAddr.sin_port;
+    std::string clientPortString = std::to_string(clientPort);
     
     if (this->debug) {
       std::cout << "Set up a connection from: " << ipstr << ":" <<
-        ntohs(clientAddr.sin_port) << std::endl;
+        clientPort << std::endl;
     }
 
     // encode all request params
@@ -93,8 +95,7 @@ namespace sbt {
     std::string hashEncoded = url::encode(hash->buf(), sizeof(hash->buf()));
     announce.setParam("info_hash", hashEncoded); 
     announce.setParam("peer_id", "abcdefghijklmnopqrst");
-    std::string portString = std::to_string(ntohs(clientAddr.sin_port));
-    announce.setParam("port", portString);
+    announce.setParam("port", clientPortString);
     announce.setParam("uploaded", "0");
     announce.setParam("downloaded", "0");
     announce.setParam("left", "0");
@@ -102,7 +103,7 @@ namespace sbt {
 
     HttpRequest req;
     req.setHost(announce.getHost());
-    req.setPort(announce.getPort());
+    req.setPort(80);
     req.setMethod(HttpRequest::GET);
     req.setPath(announce.serializePath());
     req.setVersion("1.1");
