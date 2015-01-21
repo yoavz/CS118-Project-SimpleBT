@@ -92,7 +92,7 @@ namespace sbt {
     // encode all request params
     ConstBufferPtr hash = metaInfo.getHash();
     const uint8_t* hashBuffer = hash->buf();
-    std::string hashEncoded = url::encode(hashBuffer, sizeof(hashBuffer));
+    std::string hashEncoded = url::encode(hashBuffer, 20);
     if (this->debug) {
       std::cout << "info hash encoded: " << hashEncoded << std::endl;
     }
