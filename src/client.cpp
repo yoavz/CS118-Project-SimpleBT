@@ -91,12 +91,12 @@ namespace sbt {
       ntohs(clientAddr.sin_port) << std::endl;
      
     // initialize a handshake and send to socket
-    msg::HandShake hs;
-    ConstBufferPtr hsBuffer = hs.encode();
-    if (send(sockfd, &hsBuffer, 68, 0) == -1) {
-      perror("send");
-      return 4;
-    }
+    // msg::HandShake hs;
+    // ConstBufferPtr hsBuffer = hs.encode();
+    // if (send(sockfd, &hsBuffer, 68, 0) == -1) {
+    //   perror("send");
+    //   return 4;
+    // }
 
     // char buf[20] = {0};
     // memset(buf, '\0', sizeof(buf));
