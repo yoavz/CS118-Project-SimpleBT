@@ -82,7 +82,7 @@ namespace sbt {
     inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
     unsigned short clientPort = clientAddr.sin_port;
     std::string clientPortString = std::to_string(clientPort);
-    announce.setParam("port", clientPortString);
+    announce.setParam("port", std::to_string(this->port));
 
     if (this->debug) {
       std::cout << "Set up a connection from: " << ipstr << ":" <<
