@@ -92,7 +92,8 @@ namespace sbt {
     hash->print(ss);
     announce.setParam("info_hash", ss.str()); 
     announce.setParam("peer_id", "abcdefghijklmnopqrst");
-    announce.setParam("port", (const char *)ntohs(clientAddr.sin_port));
+    std::string portString = std::to_string(ntohs(clientAddr.sin_port));
+    announce.setParam("port", portString);
     announce.setParam("uploaded", "0");
     announce.setParam("downloaded", "0");
     announce.setParam("left", "0");
