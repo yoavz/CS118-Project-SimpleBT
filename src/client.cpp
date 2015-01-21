@@ -12,6 +12,7 @@
 #include "client.hpp"
 #include "http/url-parsing.hpp"
 #include "http/http-request.hpp"
+#include "msg/handshake.hpp"
 
 namespace sbt {
 
@@ -77,18 +78,33 @@ namespace sbt {
       return 2;
     }
 
+    // get local socket information
     struct sockaddr_in clientAddr;
     socklen_t clientAddrLen = sizeof(clientAddr);
     if (getsockname(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen) == -1) {
       perror("getsockname");
       return 3;
     }
-
     char ipstr[INET_ADDRSTRLEN] = {'\0'};
     inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
     std::cout << "Set up a connection from: " << ipstr << ":" <<
       ntohs(clientAddr.sin_port) << std::endl;
      
+    // initialize a handshake and send to socket
+    msg::HandShake hs;
+    ConstBufferPtr hsBuffer = hs.encode();
+    if (send(sockfd, &hsBuffer, 68, 0) == -1) {
+      perror("send");
+      return 4;
+    }
+
+    char buf[20] = {0};
+    memset(buf, '\0', sizeof(buf));
+    if (recv(sockfd, buf, 20, 0) == -1) {
+      perror("recv");
+      return 5;
+    }
+    std::cout << buf << std::endl;
 
     // size_t reqLen = req.getTotalLength();
     // char *buf = new char [reqLen];
