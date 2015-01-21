@@ -40,6 +40,16 @@ namespace sbt {
     return this->_port;
   }
 
+  int Url::setParam(std::string key, std::string value)
+  {
+    this->params[key] = value;
+    return 0;
+  }
+
+  std::string serializePath()
+  {
+  }
+
   /*
    * Helper function that splits a base string by a string delimiter
    * If the delimiter is not found, it throws a UrlParsingException

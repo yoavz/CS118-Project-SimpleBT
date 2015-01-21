@@ -37,7 +37,7 @@ main(int argc, char** argv)
     sbt::Client client(argv[1], argv[2]);
 
     // fetch peer list
-    client.fetchPeerList();
+    client.trackerRequest();
   }
   catch (std::exception& e)
   {

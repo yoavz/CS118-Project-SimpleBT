@@ -40,7 +40,7 @@ public:
    * Fetches the peer list from the tracker
    * Returns 0 on success
    */
-  int fetchPeerList() ;
+  int trackerRequest() ;
 
 private:
 

@@ -37,7 +37,7 @@ namespace sbt {
   }
 
 
-  int Client::fetchPeerList() {
+  int Client::trackerRequest() {
     
     std::string announceString = metaInfo.getAnnounce();
     Url announce (announceString) ;
@@ -77,18 +77,19 @@ namespace sbt {
       return 2;
     }
 
-    // // get local socket information
-    // struct sockaddr_in clientAddr;
-    // socklen_t clientAddrLen = sizeof(clientAddr);
-    // if (getsockname(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen) == -1) {
-    //   perror("getsockname");
-    //   return 3;
-    // }
-    // char ipstr[INET_ADDRSTRLEN] = {'\0'};
-    // inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
-    // std::cout << "Set up a connection from: " << ipstr << ":" <<
-    //   ntohs(clientAddr.sin_port) << std::endl;
-     
+    // get local socket information
+    struct sockaddr_in clientAddr;
+    socklen_t clientAddrLen = sizeof(clientAddr);
+    if (getsockname(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen) == -1) {
+      perror("getsockname");
+      return 3;
+    }
+    char ipstr[INET_ADDRSTRLEN] = {'\0'};
+    inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
+    std::cout << "Set up a connection from: " << ipstr << ":" <<
+      ntohs(clientAddr.sin_port) << std::endl;
+
+    // encode all request params
     size_t reqLen = req.getTotalLength();
     char *buf = new char [reqLen];
     req.formatRequest(buf);

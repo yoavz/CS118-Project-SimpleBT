@@ -4,6 +4,7 @@
 #include <exception>
 #include <string> 
 #include <vector>
+#include <unordered_map>
 
 namespace sbt {
 
@@ -21,10 +22,17 @@ public:
   std::string getPortString();
   int getPort();
 
+  // setters
+  int setParam(std::string key, std::string value);
+
+  // serialiaze the path with the params
+  std::string serializePath();
+
 private:
 
   int _port;
   std::string _base, _protocol, _host, _path, _portString;
+  std::unordered_map<std::string, std::string> params;
 
   std::vector<std::string> extract(const std::string& base, const std::string& delim);
 };
