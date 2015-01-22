@@ -38,7 +38,7 @@ namespace sbt {
 
   Client::Client(const std::string& port, const std::string& torrent) {
     // for now, set debug flag
-    this->debug = true;
+    this->debug = false;
 
     this->torrentFile = torrent;
     this->port = std::stoi(port); 
