@@ -13,10 +13,26 @@
 #include "client.hpp"
 #include "http/url-parsing.hpp"
 #include "http/http-request.hpp"
+#include "http/http-response.hpp"
+#include "http/http-headers.hpp"
 #include "http/url-encoding.hpp"
 #include "msg/handshake.hpp"
 
 namespace sbt {
+
+  std::vector<std::string> extract(const std::string& base, const std::string& delim)   {
+    std::vector<std::string> split;
+
+    int pos;
+    if ((pos = base.find(delim)) != std::string::npos) {
+      split.push_back(base.substr(0, pos));
+      split.push_back(base.substr(pos + delim.length(), base.length()));
+    } else {
+      throw 10;
+    }
+
+    return split;
+  }
 
   Client::Client(const std::string& port, const std::string& torrent) {
     // for now, set debug flag
@@ -130,7 +146,16 @@ namespace sbt {
     if (waitForResponse(sockfd, respStream))
       return 5;
 
-    std::cout << respStream.str() << std::endl;
+    // parse the HTTP response
+    std::vector<std::string> temp;
+    std::string respString = respStream.str();
+    temp = extract(respString, "\r\n");
+
+    std::string httpHeader = temp.at(0);
+    std::cout << temp.at(1);
+    // 
+
+    // std::cout << respStream.str() << std::endl;
 
     return 0;
   }
