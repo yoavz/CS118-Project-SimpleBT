@@ -11,11 +11,13 @@
 
 // internal references
 #include "client.hpp"
+#include "tracker-response.hpp"
 #include "http/url-parsing.hpp"
 #include "http/http-request.hpp"
 #include "http/http-response.hpp"
 #include "http/http-headers.hpp"
 #include "http/url-encoding.hpp"
+#include "util/bencoding.hpp"
 #include "msg/handshake.hpp"
 
 namespace sbt {
@@ -154,11 +156,20 @@ namespace sbt {
     std::string httpRest = temp.at(1);
     temp = extract(httpRest, "\r\n\r\n");
 
-    std::cout << temp.at(1) << std::endl;
+    std::string bencodedBody = temp.at(1);
 
+    bencoding::Dictionary ben;
+    std::istringstream bencodedBodyStream(bencodedBody);
+    ben.wireDecode(bencodedBodyStream);
 
+    TrackerResponse trackResp;
+    trackResp.decode(ben);
 
-    // std::cout << respStream.str() << std::endl;
+    std::vector<PeerInfo> peers = trackResp.getPeers();
+    for(std::vector<PeerInfo>::iterator it = peers.begin(); it != peers.end(); ++it) {
+      std::cout << it->peerId << std::endl;
+      std::cout << it->ip << std::endl;
+    }
 
     return 0;
   }
