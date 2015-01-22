@@ -167,8 +167,7 @@ namespace sbt {
 
     std::vector<PeerInfo> peers = trackResp.getPeers();
     for(std::vector<PeerInfo>::iterator it = peers.begin(); it != peers.end(); ++it) {
-      std::cout << it->peerId << std::endl;
-      std::cout << it->ip << std::endl;
+      std::cout << it->ip << ":" << it->port << std::endl;
     }
 
     return 0;
