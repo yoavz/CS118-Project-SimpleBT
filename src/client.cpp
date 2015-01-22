@@ -229,9 +229,11 @@ namespace sbt {
     if (extract(s, "\r\n", temp)) 
       return 1;
     std::string httpRest = temp.at(1);
+    temp.clear();
     if (extract(httpRest, "\r\n\r\n", temp))
       return 1;
     std::string bencodedBody = temp.at(1);
+    temp.clear();
 
     if (this->debug) {
       std::cout << "Beconded body: " << bencodedBody << std::endl;
