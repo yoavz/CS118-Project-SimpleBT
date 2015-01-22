@@ -137,7 +137,7 @@ namespace sbt {
       std::cout << buf;
     }
 
-    // initialize a handshake and send to socket
+    // send to socket
     if (send(sockfd, buf, reqLen, 0) == -1) {
       perror("send");
       return 4;
@@ -148,27 +148,43 @@ namespace sbt {
     if (waitForResponse(sockfd, respStream))
       return 5;
 
-    // parse the HTTP response
-    std::vector<std::string> temp;
-    std::string respString = respStream.str();
-    temp = extract(respString, "\r\n");
-
-    std::string httpRest = temp.at(1);
-    temp = extract(httpRest, "\r\n\r\n");
-
-    std::string bencodedBody = temp.at(1);
-
-    bencoding::Dictionary ben;
-    std::istringstream bencodedBodyStream(bencodedBody);
-    ben.wireDecode(bencodedBodyStream);
-
+    // extract the HTTP body from the message
     TrackerResponse trackResp;
-    trackResp.decode(ben);
+    this->parseIntoTrackerResp(respStream.str(), trackResp);
+    respStream.str(""); // flush the stream
 
     std::vector<PeerInfo> peers = trackResp.getPeers();
-    for(std::vector<PeerInfo>::iterator it = peers.begin(); it != peers.end(); ++it) {
+    for(std::vector<PeerInfo>::iterator it = peers.begin(); it != peers.end(); ++it) 
+    {
       std::cout << it->ip << ":" << it->port << std::endl;
     }
+
+    uint64_t interval;
+    int counter = 0;
+    interval = trackResp.getInterval();
+    while (sleep(interval) == 0) {
+      if (this->debug) {
+        std::cout << "Sending " << counter << "th request to server..." << std::endl;
+        std::cout << buf;
+      }
+
+      // send to socket
+      if (send(sockfd, buf, reqLen, 0) == -1) {
+        perror("send");
+        return 4;
+      }
+
+      // read into stream
+      if (waitForResponse(sockfd, respStream))
+        return 5;
+
+      TrackerResponse trackerResp;
+      this->parseIntoTrackerResp(respStream.str(), trackResp);
+      respStream.str(""); // flush the stream
+
+      interval = trackResp.getInterval();
+    }
+    
 
     return 0;
   }
@@ -195,4 +211,22 @@ namespace sbt {
     
     return 0;
   }
+
+  int Client::parseIntoTrackerResp(std::string s, TrackerResponse& tr) {
+    // extract the HTTP body from the message
+    std::vector<std::string> temp;
+    temp = extract(s, "\r\n");
+    std::string httpRest = temp.at(1);
+    temp = extract(httpRest, "\r\n\r\n");
+    std::string bencodedBody = temp.at(1);
+
+    bencoding::Dictionary ben;
+    std::istringstream bencodedBodyStream(bencodedBody);
+    ben.wireDecode(bencodedBodyStream);
+
+    tr.decode(ben);
+
+    return 0;
+  }
+
 }

@@ -24,6 +24,7 @@
 
 #include "common.hpp"
 #include "meta-info.hpp"
+#include "tracker-response.hpp"
 
 namespace sbt {
 
@@ -60,6 +61,10 @@ private:
    * and returns it as a string.
    */
   int waitForResponse(int sockfd, std::stringstream& ss);
+
+  /*
+   */
+  int parseIntoTrackerResp(std::string s, TrackerResponse& tr);
 };
     
 } // namespace sbt
