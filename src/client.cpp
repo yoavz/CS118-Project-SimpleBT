@@ -165,6 +165,9 @@ namespace sbt {
     uint64_t interval;
     int counter = 0;
     interval = trackResp.getInterval();
+    if (this->debug) {
+      std::cout << "Waiting " << interval << " seconds..." << std::endl;
+    }
     while (sleep(interval) == 0 || counter > 100) {
       if (this->debug) {
         std::cout << "Sending " << ++counter << "th request to server..." << std::endl;
@@ -194,6 +197,9 @@ namespace sbt {
       }
 
       interval = trackResp.getInterval();
+      if (this->debug) {
+        std::cout << "Waiting " << interval << " seconds..." << std::endl;
+      }
     }
     
 
