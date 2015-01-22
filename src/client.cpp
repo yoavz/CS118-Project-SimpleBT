@@ -152,6 +152,9 @@ namespace sbt {
         std::cout << buf;
       }
 
+      // set up a new socket
+      sockfd = this->setUpSocket(serverAddr);
+
       // send to socket
       if (send(sockfd, buf, reqLen, 0) == -1) {
         perror("send");
