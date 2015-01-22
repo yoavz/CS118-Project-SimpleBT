@@ -127,6 +127,8 @@ namespace sbt {
     if (waitForResponse(sockfd, respStream))
       return 5;
 
+    close(sockfd);
+
     // extract the HTTP body from the message
     TrackerResponse trackResp;
     if (this->parseIntoTrackerResp(respStream.str(), trackResp)) {
@@ -172,6 +174,8 @@ namespace sbt {
       std::stringstream newStream;
       if (waitForResponse(sockfd, newStream))
         return 5;
+
+      close(sockfd);
 
       if (this->debug) {
         std::cout << "Got response from server" << std::endl;
