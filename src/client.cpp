@@ -22,18 +22,18 @@
 
 namespace sbt {
 
-  std::vector<std::string> extract(const std::string& base, const std::string& delim)   {
-    std::vector<std::string> split;
-
+  int extract(const std::string& base, 
+              const std::string& delim,
+              std::vector<std::string>& v) { 
     int pos;
     if ((pos = base.find(delim)) != std::string::npos) {
-      split.push_back(base.substr(0, pos));
-      split.push_back(base.substr(pos + delim.length(), base.length()));
+      v.push_back(base.substr(0, pos));
+      v.push_back(base.substr(pos + delim.length(), base.length()));
     } else {
-      throw 10;
+      return 1;
     }
 
-    return split;
+    return 0;
   }
 
   Client::Client(const std::string& port, const std::string& torrent) {
@@ -150,7 +150,10 @@ namespace sbt {
 
     // extract the HTTP body from the message
     TrackerResponse trackResp;
-    this->parseIntoTrackerResp(respStream.str(), trackResp);
+    if (this->parseIntoTrackerResp(respStream.str(), trackResp)) {
+      std::cerr << "response parse error (response printed below" << std::endl;
+      std::cerr << respStream.str() ;
+    }
     respStream.str(""); // flush the stream
 
     std::vector<PeerInfo> peers = trackResp.getPeers();
@@ -184,7 +187,10 @@ namespace sbt {
       }
 
       TrackerResponse trackerResp;
-      this->parseIntoTrackerResp(respStream.str(), trackResp);
+      if (this->parseIntoTrackerResp(respStream.str(), trackResp)) {
+        std::cerr << "response parse error (response printed below" << std::endl;
+        std::cerr << respStream.str() ;
+      }
       respStream.str(""); // flush the stream
 
       interval = trackResp.getInterval();
@@ -220,9 +226,11 @@ namespace sbt {
   int Client::parseIntoTrackerResp(std::string s, TrackerResponse& tr) {
     // extract the HTTP body from the message
     std::vector<std::string> temp;
-    temp = extract(s, "\r\n");
+    if (extract(s, "\r\n", temp)) 
+      return 1;
     std::string httpRest = temp.at(1);
-    temp = extract(httpRest, "\r\n\r\n");
+    if (extract(httpRest, "\r\n\r\n", temp))
+      return 1;
     std::string bencodedBody = temp.at(1);
 
     bencoding::Dictionary ben;
