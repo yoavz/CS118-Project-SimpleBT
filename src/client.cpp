@@ -178,20 +178,20 @@ namespace sbt {
       }
 
       // read into stream
-      if (waitForResponse(sockfd, respStream))
+      std::stringstream newStream;
+      if (waitForResponse(sockfd, newStream))
         return 5;
 
       if (this->debug) {
         std::cout << "Got response from server" << std::endl;
-        std::cout << respStream.str();
+        std::cout << newStream.str();
       }
 
       TrackerResponse trackerResp;
-      if (this->parseIntoTrackerResp(respStream.str(), trackResp)) {
-        std::cerr << "response parse error (response printed below" << std::endl;
-        std::cerr << respStream.str() ;
+      if (this->parseIntoTrackerResp(newStream.str(), trackResp)) {
+        std::cerr << "response parse error (response printed below)" << std::endl;
+        std::cerr << newStream.str() ;
       }
-      respStream.str(""); // flush the stream
 
       interval = trackResp.getInterval();
     }
