@@ -151,9 +151,12 @@ namespace sbt {
     std::string respString = respStream.str();
     temp = extract(respString, "\r\n");
 
-    std::string httpHeader = temp.at(0);
-    std::cout << temp.at(1);
-    // 
+    std::string httpRest = temp.at(1);
+    temp = extract(httpRest, "\r\n\r\n");
+
+    std::cout << temp.at(1) << std::endl;
+
+
 
     // std::cout << respStream.str() << std::endl;
 
