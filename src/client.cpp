@@ -223,6 +223,11 @@ namespace sbt {
       if (status == 0)
         isEnd = true;
 
+      if (this->debug) {
+        std::cout << "Recieved chunk: " << respBuf << std::endl;
+        std::cout << "isEnd: " << isEnd << std::endl;
+      }
+
       ss << respBuf;
     }
     
