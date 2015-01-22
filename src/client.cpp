@@ -38,7 +38,7 @@ namespace sbt {
 
   Client::Client(const std::string& port, const std::string& torrent) {
     // for now, set debug flag
-    this->debug = false;
+    this->debug = true;
 
     this->torrentFile = torrent;
     this->port = std::stoi(port); 
@@ -232,6 +232,10 @@ namespace sbt {
     if (extract(httpRest, "\r\n\r\n", temp))
       return 1;
     std::string bencodedBody = temp.at(1);
+
+    if (this->debug) {
+      std::cout << "Beconded body: " << bencodedBody << std::endl;
+    }
 
     bencoding::Dictionary ben;
     std::istringstream bencodedBodyStream(bencodedBody);
