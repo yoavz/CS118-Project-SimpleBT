@@ -46,6 +46,12 @@ namespace sbt {
     return 0;
   }
 
+  int Url::removeParam(std::string key)
+  {
+    this->params.erase(key);
+    return 0;
+  }
+
   std::string Url::serializePath()
   {
     std::string path = this->getPath();

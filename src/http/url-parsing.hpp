@@ -24,6 +24,7 @@ public:
 
   // setters
   int setParam(std::string key, std::string value);
+  int removeParam(std::string key);
 
   // serialiaze the path with the params
   std::string serializePath();
