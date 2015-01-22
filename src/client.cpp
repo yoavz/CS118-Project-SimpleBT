@@ -81,29 +81,7 @@ namespace sbt {
     struct sockaddr_in* serverAddr = (struct sockaddr_in*)res->ai_addr;
 
     // initialize and connect the socket
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (connect(sockfd, 
-                (struct sockaddr *)serverAddr, 
-                sizeof(*serverAddr)) == -1) {
-      perror("connect");
-      return 2;
-    }
-
-    // get local socket information
-    struct sockaddr_in clientAddr;
-    socklen_t clientAddrLen = sizeof(clientAddr);
-    if (getsockname(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen) == -1) {
-      perror("getsockname");
-      return 3;
-    }
-    char ipstr[INET_ADDRSTRLEN] = {'\0'};
-    inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
-    unsigned short clientPort = clientAddr.sin_port;
-    std::string clientPortString = std::to_string(clientPort);
-    if (this->debug) {
-      std::cout << "Set up a connection from: " << ipstr << ":" <<
-        clientPort << std::endl;
-    }
+    int sockfd = this->setUpSocket(serverAddr);
 
     // encode all request params
     ConstBufferPtr hash = metaInfo.getHash();
@@ -258,6 +236,35 @@ namespace sbt {
     tr.decode(ben);
 
     return 0;
+  }
+
+  int Client::setUpSocket(struct sockaddr_in *serverAddr) {
+
+    // initialize and connect the socket
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (connect(sockfd, 
+                (struct sockaddr *)serverAddr, 
+                sizeof(*serverAddr)) == -1) {
+      perror("connect");
+      return -1;
+    }
+
+    // get local socket information
+    struct sockaddr_in clientAddr;
+    socklen_t clientAddrLen = sizeof(clientAddr);
+    if (getsockname(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen) == -1) {
+      perror("getsockname");
+      return 3;
+    }
+    char ipstr[INET_ADDRSTRLEN] = {'\0'};
+    inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
+    unsigned short clientPort = clientAddr.sin_port;
+    if (this->debug) {
+      std::cout << "Set up a connection from: " << ipstr << ":" <<
+        clientPort << std::endl;
+    }
+
+    return sockfd;
   }
 
 }

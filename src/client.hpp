@@ -65,6 +65,8 @@ private:
   /*
    */
   int parseIntoTrackerResp(std::string s, TrackerResponse& tr);
+
+  int setUpSocket(struct sockaddr_in *serverAddr) ;
 };
     
 } // namespace sbt
