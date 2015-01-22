@@ -180,8 +180,10 @@ namespace sbt {
 
       TrackerResponse trackerResp;
       if (this->parseIntoTrackerResp(newStream.str(), trackResp)) {
-        std::cerr << "response parse error (response printed below)" << std::endl;
-        std::cerr << newStream.str() << std::endl;
+        if (this->debug) {
+          std::cerr << "response parse error (response printed below)" << std::endl;
+          std::cerr << newStream.str() << std::endl;
+        }
         return 1;
       }
 
