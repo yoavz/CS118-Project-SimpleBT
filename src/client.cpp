@@ -140,13 +140,12 @@ namespace sbt {
     {
       std::cout << it->ip << ":" << it->port << std::endl;
     }
-    return 0;
 
-    // announce.removeParam("event");
-    // req.setPath(announce.serializePath());
-    // reqLen = req.getTotalLength();
-    // buf = new char [reqLen];
-    // req.formatRequest(buf);
+    announce.removeParam("event");
+    req.setPath(announce.serializePath());
+    reqLen = req.getTotalLength();
+    buf = new char [reqLen];
+    req.formatRequest(buf);
 
     uint64_t interval;
     int counter = 0;
