@@ -162,9 +162,9 @@ namespace sbt {
     uint64_t interval;
     int counter = 0;
     interval = trackResp.getInterval();
-    while (sleep(interval) == 0) {
+    while (sleep(interval) == 0 || counter > 100) {
       if (this->debug) {
-        std::cout << "Sending " << counter << "th request to server..." << std::endl;
+        std::cout << "Sending " << ++counter << "th request to server..." << std::endl;
         std::cout << buf;
       }
 
@@ -177,6 +177,11 @@ namespace sbt {
       // read into stream
       if (waitForResponse(sockfd, respStream))
         return 5;
+
+      if (this->debug) {
+        std::cout << "Got response from server" << std::endl;
+        std::cout << respStream.str();
+      }
 
       TrackerResponse trackerResp;
       this->parseIntoTrackerResp(respStream.str(), trackResp);
