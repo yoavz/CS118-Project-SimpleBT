@@ -1,0 +1,3 @@
+Yoav Zimmerman wrote the code that parses the torrent file and constructs the GET request from the announcer information.
+Noah Hadfield-Menell wrote the URL parsing and serializing module for extracting the host and encoded the GET request path.
+Together, we wrote the code that sends request to the tracker over sockets.
