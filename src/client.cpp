@@ -24,6 +24,7 @@
 #include "tracker-response.hpp"
 #include "http/http-request.hpp"
 #include "http/http-response.hpp"
+#include "util/hash.hpp"
 #include <fstream>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -55,7 +56,8 @@ Client::Client(const std::string& port, const std::string& torrent)
 
   loadMetaInfo(torrent);
 
-  run();
+  prepareFile();
+  // run();
 }
 
 void
@@ -260,5 +262,73 @@ Client::recvTrackerResponse()
 
   m_isFirstRes = false;
 }
+
+void 
+Client::prepareFile()
+{
+  
+  std::string torrentFileName = m_metaInfo.getName();
+  std::vector<uint8_t> pieces = m_metaInfo.getPieces();
+  int64_t fileLength = m_metaInfo.getLength();
+  int64_t pieceLength = m_metaInfo.getPieceLength();
+  int64_t pieceCount = fileLength / pieceLength + (fileLength % pieceLength == 0 ? 0 : 1);
+  int64_t finalPieceLength = fileLength % pieceLength;
+  if (finalPieceLength == 0) finalPieceLength = pieceLength;
+
+  std::cout << "Piece length: " << pieceLength << std::endl ;
+  std::cout << "File length: " << fileLength << std::endl ;
+  std::cout << "Pieces: " << pieces.size() << std::endl ;
+
+  // m_piecesDone = std::vector<bool> (pieceCount);
+  // initialize all pieces to false
+  for (int64_t i=0; i<pieceCount; i++) {
+    m_piecesDone.push_back(false);
+  }
+
+  // close a file if it's already open
+  fclose(m_torrentFile);
+  m_torrentFile = fopen (torrentFileName.c_str(), "r");
+
+  // if file exists and it's a proper size
+  if (m_torrentFile != NULL) {
+    fseek(m_torrentFile, 0, SEEK_END);
+    if (ftell(m_torrentFile) == fileLength) {
+
+      fseek(m_torrentFile, 0, SEEK_SET);
+      char *cBuf = new char[pieceLength];
+      std::vector<uint8_t> sha1;
+
+      for (int64_t i=0; i<pieceCount; i++) {
+        fread(cBuf, 
+              pieceLength, 
+              i == pieceCount-1 ? finalPieceLength : pieceLength,
+              m_torrentFile);
+
+        Buffer pieceBuf(cBuf, pieceLength);
+        sha1 = util::sha1(pieceBuf);
+        bool pieceValid = true;
+
+        for (int j=0; j<20; j++) {
+          if (sha1.at(j) != pieces.at(i*20+j)) {
+            pieceValid = false;
+            break;
+          }
+        }
+
+        m_piecesDone.at(i) = pieceValid;
+      }
+
+      return;
+    } 
+  }
+
+  // file doesn't exist or it's not the right length
+  // create and allocate to proper size 
+  m_torrentFile = fopen(torrentFileName.c_str(), "w+");
+  fseek(m_torrentFile, fileLength-1, SEEK_SET);
+  fputc(0, m_torrentFile);
+
+  return;
+} 
 
 } // namespace sbt

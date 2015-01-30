@@ -75,6 +75,9 @@ private:
   void
   recvTrackerResponse();
 
+  void 
+  prepareFile();
+
 private:
   MetaInfo m_metaInfo;
   std::string m_trackerHost;
@@ -91,6 +94,9 @@ private:
   uint64_t m_interval;
   bool m_isFirstReq;
   bool m_isFirstRes;
+
+  FILE *m_torrentFile;
+  std::vector<bool> m_piecesDone;
 };
 
 } // namespace sbt
