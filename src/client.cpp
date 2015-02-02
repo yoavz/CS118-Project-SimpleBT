@@ -56,8 +56,8 @@ Client::Client(const std::string& port, const std::string& torrent)
 
   loadMetaInfo(torrent);
 
-  prepareFile();
-  // run();
+  // prepareFile();
+  run();
 }
 
 void
@@ -330,5 +330,21 @@ Client::prepareFile()
 
   return;
 } 
+
+// TODO:
+// handles the response to the peer
+void 
+Client::handlePeerResponse(int sockfd) 
+{
+  return;
+}
+
+// TODO:
+// handles the request sent
+int 
+Client::buildPeerResponse(int sockfd, std::ofstream& resp) 
+{
+  return 0;
+}
 
 } // namespace sbt

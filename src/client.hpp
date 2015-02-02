@@ -78,6 +78,12 @@ private:
   void 
   prepareFile();
 
+  void 
+  handlePeerResponse(int sockfd);
+
+  int 
+  buildPeerResponse(int sockfd, std::ofstream& resp);
+
 private:
   MetaInfo m_metaInfo;
   std::string m_trackerHost;
@@ -97,6 +103,9 @@ private:
 
   FILE *m_torrentFile;
   std::vector<bool> m_piecesDone;
+  
+  // map of peers (sockfd) -> piece number 
+  std::map<int, uint64_t> m_peerPieces;
 };
 
 } // namespace sbt
