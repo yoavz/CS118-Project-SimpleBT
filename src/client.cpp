@@ -87,8 +87,8 @@ Client::run()
 
   for (const auto& peer : m_peers) {
     std::string peerPort = std::to_string(peer.port);
-    std::cout << peerPort << std::endl;
-    if (peerPort == m_trackerPort)
+    
+    if (peerPort == m_clientPort)
       continue;
 
     std::cout << "Connecting to " << peerPort << std::endl; 
