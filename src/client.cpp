@@ -61,6 +61,9 @@ Client::Client(const std::string& port, const std::string& torrent)
   loadMetaInfo(torrent);
 
   prepareFile();
+
+  std::cout << "prepared file!" << std::endl;
+
   run();
 }
 
@@ -79,6 +82,8 @@ Client::run()
   connectTracker();
   sendTrackerRequest();
   recvTrackerResponse();
+
+  std::cout << "recieved and parsed tracker resp" << std::endl;
 
   for (const auto& peer : m_peers) {
     std::string peerPort = std::to_string(peer.port);
@@ -326,9 +331,9 @@ Client::prepareFile()
   int64_t finalPieceLength = fileLength % pieceLength;
   if (finalPieceLength == 0) finalPieceLength = pieceLength;
 
-  std::cout << "Piece length: " << pieceLength << std::endl ;
-  std::cout << "File length: " << fileLength << std::endl ;
-  std::cout << "Pieces: " << pieces.size() << std::endl ;
+  // std::cout << "Piece length: " << pieceLength << std::endl ;
+  // std::cout << "File length: " << fileLength << std::endl ;
+  // std::cout << "Pieces: " << pieces.size() << std::endl ;
 
   // m_piecesDone = std::vector<bool> (pieceCount);
   // initialize all pieces to false
