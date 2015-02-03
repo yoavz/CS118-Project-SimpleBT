@@ -402,6 +402,8 @@ Client::peerProcedure(std::string peerId)
   ConstBufferPtr hsMsg = hs.encode();
   send(peerSock, hsMsg->buf(), hsMsg->size(), 0);
 
+  std::cout << "sent handshake" << std::endl;
+
   if ((resp = waitForResponse(peerSock)) == NULL) {
     std::cout << "Resp error in peer " << peerId << std::endl;
     // pthread_exit(NULL);
@@ -410,6 +412,8 @@ Client::peerProcedure(std::string peerId)
 
   msg::HandShake hsRsp;
   hsRsp.decode(resp);
+
+  std::cout << "got handshake" << std::endl;
 
   // TODO: error checking, retry here if msg is corrupted
 
