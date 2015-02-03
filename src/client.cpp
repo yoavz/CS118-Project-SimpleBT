@@ -25,10 +25,13 @@
 #include "http/http-request.hpp"
 #include "http/http-response.hpp"
 #include "util/hash.hpp"
+#include "util/buffer-stream.hpp"
+#include "msg/msg-base.hpp"
+#include "msg/handshake.hpp"
+
 #include <fstream>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
-
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -40,6 +43,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
+#include <pthread.h>
 
 
 
@@ -63,14 +67,19 @@ Client::Client(const std::string& port, const std::string& torrent)
 void
 Client::run()
 {
-  while (true) {
-    connectTracker();
-    sendTrackerRequest();
-    m_isFirstReq = false;
-    recvTrackerResponse();
-    close(m_trackerSock);
-    sleep(m_interval);
-  }
+  // while (true) {
+  //   connectTracker();
+  //   sendTrackerRequest();
+  //   m_isFirstReq = false;
+  //   recvTrackerResponse();
+  //   close(m_trackerSock);
+  //   sleep(m_interval);
+  // }
+  
+  connectTracker();
+  sendTrackerRequest();
+  recvTrackerResponse();
+
 }
 
 void
@@ -331,20 +340,113 @@ Client::prepareFile()
   return;
 } 
 
+//
+void 
+Client::peerProcedure(std::string peerId) 
+{
+  ConstBufferPtr resp;
+
+  // TODO: get actual sock
+  int peerSock = 0;
+
+  // Handshake that shi-
+  msg::HandShake hs;
+  hs.setPeerId(peerId);
+  ConstBufferPtr hsMsg = hs.encode();
+  send(peerSock, hsMsg->buf(), hsMsg->size(), 0);
+
+  if ((resp = waitForResponse(peerSock)) == NULL) {
+    std::cout << "Resp error in peer " << peerId << std::endl;
+    // pthread_exit(NULL);
+    return;
+  }
+
+  msg::HandShake hsRsp;
+  hsRsp.decode(resp);
+
+  // TODO: error checking, retry here if msg is corrupted
+
+  // sanity check peerId
+  if (peerId != hsRsp.getPeerId()) {
+    std::cout << "Mismatch peer ID in handshake with peer " << peerId << std::endl;
+    // pthread_exit(NULL);
+    return;
+  }
+
+  // TODO: compare ptrs correctly?
+  if (m_metaInfo.getHash() != hsRsp.getInfoHash()) {
+    std::cout << "Detected incorrect info hash with peer " << peerId << std::endl;
+    // pthread_exit(NULL);
+    return;
+  }
+
+  // Send bit field
+
+  return;
+  // MAIN LOOP
+  // while (true) {
+  //   ConstBufferPtr currResp;
+  //   if ((currResp = waitForResponse(peerSock)) == NULL) {
+  //     std::cout << "Resp error in peer " << peerId << std::endl;
+  //     // pthread_exit(NULL);
+  //     return;
+  //   }
+  //
+  //   msg:: respMsg;
+  //   respMsg.decode(currResp);
+  //   if (respMsg.getId() == MSG_ID_CANCEL) {
+  //     std::cout << "Peer " << peerId << " recieved cancel msg, closing..." << std::endl;
+  //     // pthread_exit(NULL);
+  //     return;
+  //   }
+  //
+  //   std::cout << respMsg.getId() << std::endl;
+  //
+  //   const char *myResp = NULL;
+  //   if (handlePeerResponse(peerId, myResp))
+  //     continue;
+  //   send( peerSock, myResp, sizeof(myResp), 0 );
+  // }
+}
+
+ConstBufferPtr
+Client::waitForResponse(int sockfd)
+{
+  OBufferStream obuf;
+  int status;
+  bool isEnd = false;
+  char buf[512] = {0};
+
+  while (!isEnd) {
+    memset(buf, 0, sizeof(buf));
+    if ((status = recv(sockfd, buf, 512, 0)) == -1) {
+      perror("recv");
+      return NULL;
+    }
+    // recv returns 0 on EOF
+    if (status == 0)
+      isEnd = true;
+    obuf << buf;
+  }  
+
+  return obuf.buf();
+}
+
+
 // TODO:
 // handles the response to the peer
 void 
-Client::handlePeerResponse(int sockfd) 
+Client::handlePeerResponse(std::string peerId, const char *resp)
 {
   return;
 }
 
 // TODO:
 // handles the request sent
-int 
-Client::buildPeerResponse(int sockfd, std::ofstream& resp) 
-{
-  return 0;
-}
+// int 
+// Client::buildPeerResponse(std::string peerId, std::ofstream& resp) 
+// {
+//   return 0;
+// }
 
 } // namespace sbt

@@ -79,10 +79,16 @@ private:
   prepareFile();
 
   void 
-  handlePeerResponse(int sockfd);
+  handlePeerResponse(std::string peerId, const char *resp);
 
-  int 
-  buildPeerResponse(int sockfd, std::ofstream& resp);
+  // int 
+  // buildPeerResponse(int sockfd, std::ofstream& resp);
+
+  ConstBufferPtr
+  waitForResponse(int sockfd);
+
+  void 
+  peerProcedure(std::string peerId) ;
 
 private:
   MetaInfo m_metaInfo;
