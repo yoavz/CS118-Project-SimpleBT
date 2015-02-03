@@ -345,6 +345,7 @@ Client::prepareFile()
 
   // if file exists and it's a proper size
   if (m_torrentFile != NULL) {
+    std::cout << "don't crash" << std::endl;
     fseek(m_torrentFile, 0, SEEK_END);
     if (ftell(m_torrentFile) == fileLength) {
 
