@@ -24,6 +24,7 @@
 
 #include "common.hpp"
 #include "meta-info.hpp"
+#include "tracker-response.hpp"
 
 namespace sbt {
 
@@ -90,6 +91,9 @@ private:
   void 
   peerProcedure(std::string peerId) ;
 
+  void
+  connectPeer(int peerSock, std::string peerIp, std::string peerPort);
+
 private:
   MetaInfo m_metaInfo;
   std::string m_trackerHost;
@@ -112,6 +116,9 @@ private:
   
   // map of peers (sockfd) -> piece number 
   std::map<int, uint64_t> m_peerPieces;
+
+  // list of peers (from tracker)
+  std::vector<PeerInfo> m_peers;
 };
 
 } // namespace sbt

@@ -60,7 +60,7 @@ Client::Client(const std::string& port, const std::string& torrent)
 
   loadMetaInfo(torrent);
 
-  // prepareFile();
+  prepareFile();
   run();
 }
 
@@ -80,6 +80,48 @@ Client::run()
   sendTrackerRequest();
   recvTrackerResponse();
 
+  for (const auto& peer : m_peers) {
+    std::string peerPort = std::to_string(peer.port);
+    if (peerPort == m_trackerPort)
+      continue;
+
+    std::cout << "Connecting to " << peerPort << std::endl; 
+
+    int peerSock = socket(AF_INET, SOCK_STREAM, 0);
+    connectPeer(peerSock, peer.ip, peerPort);
+
+    peerProcedure(peer.peerId);
+    
+    break;
+  }
+}
+
+void
+Client::connectPeer(int peerSock, std::string peerIp, std::string peerPort) 
+{
+    struct addrinfo hints;
+    struct addrinfo* res;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET; // IPv4
+    hints.ai_socktype = SOCK_STREAM;
+
+    // get address
+    int status = 0;
+    if ((status = getaddrinfo(peerIp.c_str(), peerPort.c_str(), &hints, &res)) != 0)
+      throw Error("Cannot resolver peer ip");
+
+    struct sockaddr_in* ipv4 = (struct sockaddr_in*)res->ai_addr;
+    char ipstr[INET_ADDRSTRLEN] = {'\0'};
+    inet_ntop(res->ai_family, &(ipv4->sin_addr), ipstr, sizeof(ipstr));
+    // std::cout << "tracker address: " << ipstr << ":" << ntohs(ipv4->sin_port) << std::endl;
+
+    if (connect(peerSock, res->ai_addr, res->ai_addrlen) == -1) {
+      perror("connect");
+      throw Error("Cannot connect peer");
+    }
+
+    freeaddrinfo(res);
 }
 
 void
@@ -260,14 +302,14 @@ Client::recvTrackerResponse()
 
   TrackerResponse trackerResponse;
   trackerResponse.decode(dict);
-  const std::vector<PeerInfo>& peers = trackerResponse.getPeers();
+  m_peers = trackerResponse.getPeers();
   m_interval = trackerResponse.getInterval();
 
-  if (m_isFirstRes) {
-    for (const auto& peer : peers) {
-      std::cout << peer.ip << ":" << peer.port << std::endl;
-    }
-  }
+  // if (m_isFirstRes) {
+  //   for (const auto& peer : peers) {
+  //     std::cout << peer.ip << ":" << peer.port << std::endl;
+  //   }
+  // }
 
   m_isFirstRes = false;
 }
