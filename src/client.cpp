@@ -336,8 +336,6 @@ Client::prepareFile()
     m_piecesDone.push_back(false);
   }
 
-  // close a file if it's already open
-  fclose(m_torrentFile);
   m_torrentFile = fopen (torrentFileName.c_str(), "r");
 
   // if file exists and it's a proper size
