@@ -60,7 +60,7 @@ Client::Client(const std::string& port, const std::string& torrent)
 
   loadMetaInfo(torrent);
 
-  prepareFile();
+  // prepareFile();
 
   std::cout << "prepared file!" << std::endl;
 
@@ -87,6 +87,7 @@ Client::run()
 
   for (const auto& peer : m_peers) {
     std::string peerPort = std::to_string(peer.port);
+    std::cout << peerPort << std::endl;
     if (peerPort == m_trackerPort)
       continue;
 
@@ -184,7 +185,6 @@ Client::connectTracker()
   int status = 0;
   if ((status = getaddrinfo(m_trackerHost.c_str(), m_trackerPort.c_str(), &hints, &res)) != 0)
     throw Error("Cannot resolver tracker ip");
-
   struct sockaddr_in* ipv4 = (struct sockaddr_in*)res->ai_addr;
   char ipstr[INET_ADDRSTRLEN] = {'\0'};
   inet_ntop(res->ai_family, &(ipv4->sin_addr), ipstr, sizeof(ipstr));
@@ -297,7 +297,6 @@ Client::recvTrackerResponse()
 
   close(m_trackerSock);
   FD_CLR(m_trackerSock, &m_readSocks);
-
 
   bencoding::Dictionary dict;
 
