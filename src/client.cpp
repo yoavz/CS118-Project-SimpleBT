@@ -96,6 +96,8 @@ Client::run()
     int peerSock = socket(AF_INET, SOCK_STREAM, 0);
     connectPeer(peerSock, peer.ip, peerPort);
 
+    std::cout << "Connected to " << peerPort << std::endl; 
+
     peerProcedure(peer.peerId);
     
     break;
@@ -389,7 +391,7 @@ Client::prepareFile()
 void 
 Client::peerProcedure(std::string peerId) 
 {
-  ConstBufferPtr resp;
+  ConstBufferPtr resp = std::make_shared<Buffer> (1024, 1);
 
   // TODO: get actual sock
   int peerSock = 0;
