@@ -331,9 +331,9 @@ Client::prepareFile()
   int64_t finalPieceLength = fileLength % pieceLength;
   if (finalPieceLength == 0) finalPieceLength = pieceLength;
 
-  // std::cout << "Piece length: " << pieceLength << std::endl ;
-  // std::cout << "File length: " << fileLength << std::endl ;
-  // std::cout << "Pieces: " << pieces.size() << std::endl ;
+  std::cout << "Piece length: " << pieceLength << std::endl ;
+  std::cout << "File length: " << fileLength << std::endl ;
+  std::cout << "Pieces: " << pieces.size() << std::endl ;
 
   // m_piecesDone = std::vector<bool> (pieceCount);
   // initialize all pieces to false
@@ -341,11 +341,11 @@ Client::prepareFile()
     m_piecesDone.push_back(false);
   }
 
+  m_torrentFile = (FILE*)malloc(sizeof(FILE));
   m_torrentFile = fopen (torrentFileName.c_str(), "r");
 
   // if file exists and it's a proper size
   if (m_torrentFile != NULL) {
-    std::cout << "don't crash" << std::endl;
     fseek(m_torrentFile, 0, SEEK_END);
     if (ftell(m_torrentFile) == fileLength) {
 
