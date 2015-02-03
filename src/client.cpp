@@ -406,6 +406,7 @@ Client::peerProcedure(std::string peerId, int peerSock)
     return;
   }
 
+  std::cout << hsRsp.buf() << std::endl;
   msg::HandShake hsRsp;
   hsRsp.decode(resp);
 
