@@ -98,7 +98,7 @@ Client::run()
 
     std::cout << "Connected to " << peerPort << std::endl; 
 
-    peerProcedure(peer.peerId);
+    peerProcedure(peer.peerId, peerSock);
     
     break;
   }
@@ -389,16 +389,12 @@ Client::prepareFile()
 
 //
 void 
-Client::peerProcedure(std::string peerId) 
+Client::peerProcedure(std::string peerId, int peerSock) 
 {
   ConstBufferPtr resp = std::make_shared<Buffer> (1024, 1);
 
-  // TODO: get actual sock
-  int peerSock = 0;
-
   // Handshake that shi-
-  msg::HandShake hs;
-  hs.setPeerId(peerId);
+  msg::HandShake hs(m_metaInfo.getHash(), peerId);
   ConstBufferPtr hsMsg = hs.encode();
   send(peerSock, hsMsg->buf(), hsMsg->size(), 0);
 
