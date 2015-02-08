@@ -98,7 +98,7 @@ Client::run()
 
     std::cout << "Connected to " << peerPort << std::endl; 
 
-    peerProcedure(peer.peerId, peerSock);
+    peerProcedure("SIMPLEBT-TEST-PEERID", peerSock);
     
     break;
   }
