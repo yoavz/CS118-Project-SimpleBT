@@ -406,10 +406,8 @@ Client::peerProcedure(std::string peerId, int peerSock)
     return;
   }
 
-  std::cout << hsRsp.buf() << std::endl;
   msg::HandShake hsRsp;
   hsRsp.decode(resp);
-
   std::cout << "got handshake" << std::endl;
 
   // TODO: error checking, retry here if msg is corrupted
@@ -474,6 +472,7 @@ Client::waitForResponse(int sockfd)
     // recv returns 0 on EOF
     if (status == 0)
       isEnd = true;
+
     obuf << buf;
   }  
 
