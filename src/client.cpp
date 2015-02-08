@@ -98,7 +98,7 @@ Client::run()
 
     std::cout << "Connected to " << peerPort << std::endl; 
 
-    peerProcedure("SIMPLEBT-TEST-PEERID", peerSock);
+    peerProcedure(peerSock);
     
     break;
   }
@@ -389,19 +389,19 @@ Client::prepareFile()
 
 //
 void 
-Client::peerProcedure(std::string peerId, int peerSock) 
+Client::peerProcedure(int peerSock) 
 {
   ConstBufferPtr resp = std::make_shared<Buffer> (1024, 1);
 
   // Handshake that shi-
-  msg::HandShake hs(m_metaInfo.getHash(), peerId);
+  msg::HandShake hs(m_metaInfo.getHash(), "SIMPLEBT-TEST-PEERID");
   ConstBufferPtr hsMsg = hs.encode();
   send(peerSock, hsMsg->buf(), hsMsg->size(), 0);
 
   std::cout << "sent handshake" << std::endl;
 
   if ((resp = waitForResponse(peerSock)) == NULL) {
-    std::cout << "Resp error in peer " << peerId << std::endl;
+    std::cout << "Resp error in peer " << std::endl;
     // pthread_exit(NULL);
     return;
   }
@@ -413,15 +413,15 @@ Client::peerProcedure(std::string peerId, int peerSock)
   // TODO: error checking, retry here if msg is corrupted
 
   // sanity check peerId
-  if (peerId != hsRsp.getPeerId()) {
-    std::cout << "Mismatch peer ID in handshake with peer " << peerId << std::endl;
-    // pthread_exit(NULL);
-    return;
-  }
+  // if (peerId != hsRsp.getPeerId()) {
+  //   std::cout << "Mismatch peer ID in handshake with peer " << std::endl;
+  //   // pthread_exit(NULL);
+  //   return;
+  // }
 
   // TODO: compare ptrs correctly?
   if (m_metaInfo.getHash() != hsRsp.getInfoHash()) {
-    std::cout << "Detected incorrect info hash with peer " << peerId << std::endl;
+    std::cout << "Detected incorrect info hash with peer " << std::endl;
     // pthread_exit(NULL);
     return;
   }

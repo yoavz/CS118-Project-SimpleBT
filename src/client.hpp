@@ -89,7 +89,7 @@ private:
   waitForResponse(int sockfd);
 
   void 
-  peerProcedure(std::string peerId, int peerSock) ;
+  peerProcedure(int peerSock) ;
 
   void
   connectPeer(int peerSock, std::string peerIp, std::string peerPort);

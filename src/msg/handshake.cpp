@@ -59,8 +59,7 @@ HandShake::encode()
   return os.buf();
 }
 
-void
-HandShake::decode(ConstBufferPtr msg)
+void HandShake::decode(ConstBufferPtr msg)
 {
   if (msg->size() != HANDSHAKE_LENGTH)
     throw Error("Wrong handshake length");
