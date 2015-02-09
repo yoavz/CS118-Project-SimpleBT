@@ -94,8 +94,8 @@ Client::run()
     std::cout << "Connecting to " << peerPort << std::endl; 
 
     int peerSock = socket(AF_INET, SOCK_STREAM, 0);
-    connectPeer(peerSock, peer.ip, peerPort);
 
+    connectPeer(peerSock, peer.ip, peerPort);
     std::cout << "Connected to " << peerPort << std::endl; 
 
     peerProcedure(peerSock);
@@ -398,6 +398,7 @@ Client::peerProcedure(int peerSock)
   ConstBufferPtr hsMsg = hs.encode();
   send(peerSock, hsMsg->buf(), hsMsg->size(), 0);
 
+  std::cout << peerSock << std::endl;
   std::cout << hsMsg->size() << std::endl;
   std::cout << hsMsg->buf() << std::endl;
   std::cout << "sent handshake" << std::endl;
