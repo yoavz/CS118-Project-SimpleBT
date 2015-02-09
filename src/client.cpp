@@ -46,7 +46,6 @@
 #include <pthread.h>
 
 
-
 namespace sbt {
 
 Client::Client(const std::string& port, const std::string& torrent)
@@ -404,7 +403,8 @@ Client::peerProcedure(int peerSock)
 
   std::cout << "sent handshake" << std::endl;
 
-  if ((resp = waitForResponse(peerSock)) == NULL) {
+  // wait for a handshake (length 68) 
+  if ((resp = waitForResponse(peerSock, 68)) == NULL) {
     std::cout << "Resp error in peer " << std::endl;
     // pthread_exit(NULL);
     return;
@@ -460,28 +460,21 @@ Client::peerProcedure(int peerSock)
 }
 
 ConstBufferPtr
-Client::waitForResponse(int sockfd)
+Client::waitForResponse(int sockfd, int responseLen)
 {
   OBufferStream obuf;
   int status;
-  bool isEnd = false;
+  int total=0;
   char buf[512] = {0};
 
-  while (!isEnd) {
+  while (total < responseLen) {
     memset(buf, 0, sizeof(buf));
     if ((status = recv(sockfd, buf, 512, 0)) == -1) {
       perror("recv");
       return NULL;
     }
 
-    std::cout << buf << std::endl;
-    std::cout << sizeof(buf) << std::endl;
-    std::cout << status << std::endl;
-
-    // recv returns 0 on EOF
-    if (status == 0)
-      isEnd = true;
-
+    total += status;
     obuf << buf;
   }  
 

@@ -86,7 +86,7 @@ private:
   // buildPeerResponse(int sockfd, std::ofstream& resp);
 
   ConstBufferPtr
-  waitForResponse(int sockfd);
+  waitForResponse(int sockfd, int responseLen);
 
   void 
   peerProcedure(int peerSock) ;
