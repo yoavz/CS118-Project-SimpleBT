@@ -477,9 +477,13 @@ Client::waitForResponse(int sockfd, int responseLen)
     }
 
     total += status;
+
+    std::cout << sizeof(buf) << std::endl;
+
     obuf << buf;
   }  
 
+  std::cout << sizeof(obuf.buf()) << std::endl;
   return obuf.buf();
 }
 
