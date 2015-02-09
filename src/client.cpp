@@ -399,6 +399,7 @@ Client::peerProcedure(int peerSock)
   send(peerSock, hsMsg->buf(), hsMsg->size(), 0);
 
   std::cout << hsMsg->size() << std::endl;
+  std::cout << hsMsg->buf() << std::endl;
   std::cout << "sent handshake" << std::endl;
 
   if ((resp = waitForResponse(peerSock)) == NULL) {
