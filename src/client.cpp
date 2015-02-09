@@ -105,7 +105,6 @@ Client::run()
       connectPeer(peer);
       std::cout << "Connected to " << peerPort << std::endl; 
 
-
       peerProcedure(peer);
   }
 
@@ -331,6 +330,7 @@ Client::recvTrackerResponse()
   m_isFirstRes = false;
 }
 
+// TODO: fix allocation bug
 void 
 Client::prepareFile()
 {
@@ -438,8 +438,38 @@ Client::peerProcedure(Peer *peer)
 
   // Send bit field
   // TODO: if multithreading, this is a critical section
-  // m_metaInfo.getPieces   
-  // msg::Bitfield bf(
+  
+  // construct a bitfield
+  int numPieces = m_metaInfo.getPieces().size();
+  int numBytes = numPieces/8 + (numPieces%8 == 0 ? 0 : 1);
+  char *bitfield = (char *) malloc(numBytes);
+  memset(bitfield, 0, numPieces);
+
+  int byteNum, bitNum;
+  for (int count=0; count < numPieces/8; count++)
+  {
+    byteNum = count / 8;    
+    bitNum = count % 8;
+
+    if (m_piecesDone.at(count)) {
+      *(bitfield+byteNum) |= 1 << (7-bitNum);
+    } 
+  }
+
+  std::cout << "constructed bitfield" << std::endl;
+  send(peerSock, bitfield, numBytes, 0);
+
+  ConstBufferPtr bitfieldResp = std::make_shared<Buffer> (1024, 1);
+
+  if ((bitfieldResp = waitForResponse(peerSock, numBytes)) == NULL) {
+    std::cout << "Resp error in peer " << std::endl;
+    // pthread_exit(NULL);
+    return;
+  }
+
+  std::cout << "recieved bitfield resp" << std::endl;
+
+  free(bitfield);
 
   return;
 }
