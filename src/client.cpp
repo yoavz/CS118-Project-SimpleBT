@@ -59,9 +59,8 @@ Client::Client(const std::string& port, const std::string& torrent)
 
   loadMetaInfo(torrent);
 
-  prepareFile();
-
-  std::cout << "prepared file!" << std::endl;
+  // prepareFile();
+  // std::cout << "prepared file!" << std::endl;
 
   run();
 }
@@ -84,23 +83,31 @@ Client::run()
 
   std::cout << "recieved and parsed tracker resp" << std::endl;
 
-  for (const auto& peer : m_peers) {
-    std::string peerPort = std::to_string(peer.port);
-    
-    if (peerPort == std::to_string(m_clientPort))
-      continue;
+  for(std::map<std::string, Peer>::iterator it = m_peers.begin(); 
+      it != m_peers.end(); 
+      it++) {
 
-    std::cout << "Connecting to " << peerPort << std::endl; 
+      // iterator->first = key
+      // iterator->second = value
+      // Repeat if you also want to iterate through the second map.
 
-    int peerSock = socket(AF_INET, SOCK_STREAM, 0);
-    connectPeer(peerSock, peer.ip, peerPort);
+      Peer *current = &it->second;
 
-    std::cout << "Connected to " << peerPort << std::endl; 
+      std::string peerPort = std::to_string(current->getPort());
+      if (peerPort == std::to_string(m_clientPort))
+        continue;
 
-    peerProcedure(peerSock);
-    
-    break;
+      std::cout << "Connecting to " << peerPort << std::endl; 
+
+      int peerSock = socket(AF_INET, SOCK_STREAM, 0);
+      connectPeer(peerSock, current->getIp(), peerPort);
+
+      std::cout << "Connected to " << peerPort << std::endl; 
+      current->setSock(peerSock);
+
+      peerProcedure(peerSock);
   }
+
 }
 
 void
@@ -307,12 +314,14 @@ Client::recvTrackerResponse()
 
   TrackerResponse trackerResponse;
   trackerResponse.decode(dict);
-  m_peers = trackerResponse.getPeers();
+  std::vector<PeerInfo> infos = trackerResponse.getPeers();
   m_interval = trackerResponse.getInterval();
 
   if (m_isFirstRes) {
-    for (const auto& peer : m_peers) {
+    for (const auto& peer : infos) {
       std::cout << peer.ip << ":" << peer.port << std::endl;
+      Peer p(peer.peerId, peer.ip, peer.port);
+      m_peers.insert( std::pair<std::string, Peer> (peer.peerId, p) );
     }
   }
 
@@ -423,7 +432,7 @@ Client::peerProcedure(int peerSock)
 
   std::cout << "Recieved handshake, info hash match!" << std::endl;
 
-  // Send bit field
+  //VgSend bit field
   // TODO: if multithreading, this is a critical section
   // m_metaInfo.getPieces   
   // msg::Bitfield bf(

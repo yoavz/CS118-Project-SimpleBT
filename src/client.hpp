@@ -25,6 +25,7 @@
 #include "common.hpp"
 #include "meta-info.hpp"
 #include "tracker-response.hpp"
+#include "peer.hpp"
 
 namespace sbt {
 
@@ -115,10 +116,10 @@ private:
   std::vector<bool> m_piecesDone;
   
   // map of peers (sockfd) -> piece number 
-  std::map<int, uint64_t> m_peerPieces;
+  // std::map<int, uint64_t> m_peerPieces;
 
   // list of peers (from tracker)
-  std::vector<PeerInfo> m_peers;
+  std::map<std::string, Peer> m_peers;
 };
 
 } // namespace sbt
