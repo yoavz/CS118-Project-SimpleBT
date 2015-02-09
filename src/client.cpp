@@ -59,7 +59,7 @@ Client::Client(const std::string& port, const std::string& torrent)
 
   loadMetaInfo(torrent);
 
-  // prepareFile();
+  prepareFile();
 
   std::cout << "prepared file!" << std::endl;
 
@@ -397,11 +397,7 @@ Client::peerProcedure(int peerSock)
   ConstBufferPtr hsMsg = hs.encode();
   send(peerSock, hsMsg->buf(), hsMsg->size(), 0);
 
-  // std::cout << peerSock << std::endl;
-  // std::cout << hsMsg->size() << std::endl;
-  // std::cout << hsMsg->buf() << std::endl;
-
-  std::cout << "sent handshake" << std::endl;
+  std::cout << "Sent handshake" << std::endl;
 
   // wait for a handshake (length 68) 
   if ((resp = waitForResponse(peerSock, 68)) == NULL) {
@@ -410,52 +406,29 @@ Client::peerProcedure(int peerSock)
     return;
   }
 
-  std::cout << "got handshake" << std::endl;
-  std::cout << resp->size() << std::endl;
-
   msg::HandShake hsRsp;
   hsRsp.decode(resp);
 
   // TODO: error checking, retry here if msg is corrupted
 
-  // TODO: compare ptrs correctly?
+  // check the info hashes match. if not, stop here
   if (memcmp(m_metaInfo.getHash()->buf(), 
              hsRsp.getInfoHash()->buf(), 
              20) != 0) {
     std::cout << "Detected incorrect info hash with peer " << std::endl;
+    close(peerSock);
     // pthread_exit(NULL);
     return;
   }
 
-  std::cout << "Info hash match" << std::endl;
+  std::cout << "Recieved handshake, info hash match!" << std::endl;
 
   // Send bit field
+  // TODO: if multithreading, this is a critical section
+  // m_metaInfo.getPieces   
+  // msg::Bitfield bf(
 
   return;
-  // MAIN LOOP
-  // while (true) {
-  //   ConstBufferPtr currResp;
-  //   if ((currResp = waitForResponse(peerSock)) == NULL) {
-  //     std::cout << "Resp error in peer " << peerId << std::endl;
-  //     // pthread_exit(NULL);
-  //     return;
-  //   }
-  //
-  //   msg:: respMsg;
-  //   respMsg.decode(currResp);
-  //   if (respMsg.getId() == MSG_ID_CANCEL) {
-  //     std::cout << "Peer " << peerId << " recieved cancel msg, closing..." << std::endl;
-  //     // pthread_exit(NULL);
-  //     return;
-  //   }
-  //
-  //   std::cout << respMsg.getId() << std::endl;
-  //
-  //   const char *myResp = NULL;
-  //   if (handlePeerResponse(peerId, myResp))
-  //     continue;
-  //   send( peerSock, myResp, sizeof(myResp), 0 );
-  // }
 }
 
 ConstBufferPtr
