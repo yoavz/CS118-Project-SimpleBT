@@ -449,7 +449,7 @@ Client::peerProcedure(Peer *peer)
   memset(bitfield, 0, numBytes);
 
   int byteNum, bitNum;
-  for (int count=0; count < numPieces/8; count++)
+  for (int count=0; count < numPieces; count++)
   {
     byteNum = count / 8;    
     bitNum = count % 8;
