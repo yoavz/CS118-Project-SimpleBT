@@ -442,8 +442,11 @@ Client::peerProcedure(Peer *peer)
   // construct a bitfield
   int numPieces = m_metaInfo.getPieces().size();
   int numBytes = numPieces/8 + (numPieces%8 == 0 ? 0 : 1);
+
+  std::cout << numPieces << " " << numBytes << std::endl;
+
   char *bitfield = (char *) malloc(numBytes);
-  memset(bitfield, 0, numPieces);
+  memset(bitfield, 0, numBytes);
 
   int byteNum, bitNum;
   for (int count=0; count < numPieces/8; count++)
