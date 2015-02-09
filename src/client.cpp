@@ -464,7 +464,7 @@ Client::peerProcedure(Peer *peer)
   }
 
   std::cout << "constructed bitfield" << std::endl;
-  send(peerSock, bitfield, numBytes-1, 0);
+  send(peerSock, bitfield, numBytes, 0);
 
   ConstBufferPtr bitfieldResp = std::make_shared<Buffer> (1024, 1);
 
