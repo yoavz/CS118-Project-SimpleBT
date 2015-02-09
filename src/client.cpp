@@ -68,24 +68,14 @@ Client::Client(const std::string& port, const std::string& torrent)
 void
 Client::run()
 {
-  // while (true) {
-  //   connectTracker();
-  //   sendTrackerRequest();
-  //   m_isFirstReq = false;
-  //   recvTrackerResponse();
-  //   close(m_trackerSock);
-  //   sleep(m_interval);
-  // }
-  
+
   connectTracker();
   sendTrackerRequest();
   recvTrackerResponse();
 
   std::cout << "recieved and parsed tracker resp" << std::endl;
 
-  for(std::map<std::string, Peer>::iterator it = m_peers.begin(); 
-      it != m_peers.end(); 
-      it++) {
+  for(std::map<std::string, Peer>::iterator it = m_peers.begin(); it != m_peers.end(); it++) {
 
       // iterator->first = key
       // iterator->second = value
@@ -448,7 +438,6 @@ Client::peerProcedure(Peer *peer)
     m_piecesDone.push_back(false);
 
   std::cout << numPieces << " " << numBytes << std::endl;
-
   char *bitfield = (char *) malloc(numBytes);
   memset(bitfield, 0, numBytes);
 
@@ -496,6 +485,8 @@ Client::waitForResponse(int sockfd, int responseLen)
       perror("recv");
       return NULL;
     }
+
+    std::cout << buf << std::endl;
 
     total += status;
 
