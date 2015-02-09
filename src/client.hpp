@@ -90,10 +90,10 @@ private:
   waitForResponse(int sockfd, int responseLen);
 
   void 
-  peerProcedure(int peerSock) ;
+  peerProcedure(Peer *peer);
 
   void
-  connectPeer(int peerSock, std::string peerIp, std::string peerPort);
+  connectPeer(Peer *peer);
 
 private:
   MetaInfo m_metaInfo;

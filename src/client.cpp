@@ -91,27 +91,28 @@ Client::run()
       // iterator->second = value
       // Repeat if you also want to iterate through the second map.
 
-      Peer *current = &it->second;
+      Peer *peer = &it->second;
 
-      std::string peerPort = std::to_string(current->getPort());
+      std::string peerPort = std::to_string(peer->getPort());
       if (peerPort == std::to_string(m_clientPort))
         continue;
 
       std::cout << "Connecting to " << peerPort << std::endl; 
 
       int peerSock = socket(AF_INET, SOCK_STREAM, 0);
-      connectPeer(peerSock, current->getIp(), peerPort);
 
+      peer->setSock(peerSock);
+      connectPeer(peer);
       std::cout << "Connected to " << peerPort << std::endl; 
-      current->setSock(peerSock);
 
-      peerProcedure(peerSock);
+
+      peerProcedure(peer);
   }
 
 }
 
 void
-Client::connectPeer(int peerSock, std::string peerIp, std::string peerPort) 
+Client::connectPeer(Peer *peer) 
 {
     struct addrinfo hints;
     struct addrinfo* res;
@@ -120,9 +121,11 @@ Client::connectPeer(int peerSock, std::string peerIp, std::string peerPort)
     hints.ai_family = AF_INET; // IPv4
     hints.ai_socktype = SOCK_STREAM;
 
+    std::string peerPort = std::to_string(peer->getPort());
+
     // get address
     int status = 0;
-    if ((status = getaddrinfo(peerIp.c_str(), peerPort.c_str(), &hints, &res)) != 0)
+    if ((status = getaddrinfo(peer->getIp().c_str(), peerPort.c_str(), &hints, &res)) != 0)
       throw Error("Cannot resolver peer ip");
 
     struct sockaddr_in* ipv4 = (struct sockaddr_in*)res->ai_addr;
@@ -130,7 +133,7 @@ Client::connectPeer(int peerSock, std::string peerIp, std::string peerPort)
     inet_ntop(res->ai_family, &(ipv4->sin_addr), ipstr, sizeof(ipstr));
     // std::cout << "tracker address: " << ipstr << ":" << ntohs(ipv4->sin_port) << std::endl;
 
-    if (connect(peerSock, res->ai_addr, res->ai_addrlen) == -1) {
+    if (connect(peer->getSock(), res->ai_addr, res->ai_addrlen) == -1) {
       perror("connect");
       throw Error("Cannot connect peer");
     }
@@ -397,9 +400,10 @@ Client::prepareFile()
 
 //
 void 
-Client::peerProcedure(int peerSock) 
+Client::peerProcedure(Peer *peer) 
 {
   ConstBufferPtr resp = std::make_shared<Buffer> (1024, 1);
+  int peerSock = peer->getSock();
 
   // Handshake that shi-
   msg::HandShake hs(m_metaInfo.getHash(), "SIMPLEBT-TEST-PEERID");
@@ -432,7 +436,7 @@ Client::peerProcedure(int peerSock)
 
   std::cout << "Recieved handshake, info hash match!" << std::endl;
 
-  //VgSend bit field
+  // Send bit field
   // TODO: if multithreading, this is a critical section
   // m_metaInfo.getPieces   
   // msg::Bitfield bf(
