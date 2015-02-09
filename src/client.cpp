@@ -401,6 +401,7 @@ Client::peerProcedure(int peerSock)
   std::cout << peerSock << std::endl;
   std::cout << hsMsg->size() << std::endl;
   std::cout << hsMsg->buf() << std::endl;
+
   std::cout << "sent handshake" << std::endl;
 
   if ((resp = waitForResponse(peerSock)) == NULL) {
@@ -472,6 +473,9 @@ Client::waitForResponse(int sockfd)
       perror("recv");
       return NULL;
     }
+
+    std::cout << buf << std::endl;
+
     // recv returns 0 on EOF
     if (status == 0)
       isEnd = true;
