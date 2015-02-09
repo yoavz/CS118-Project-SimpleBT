@@ -443,6 +443,10 @@ Client::peerProcedure(Peer *peer)
   int numPieces = m_metaInfo.getPieces().size();
   int numBytes = numPieces/8 + (numPieces%8 == 0 ? 0 : 1);
 
+  // TODO: remove once you fix prepare file bug
+  for (int i=0; i<numPieces; i++)
+    m_piecesDone.push_back(false);
+
   std::cout << numPieces << " " << numBytes << std::endl;
 
   char *bitfield = (char *) malloc(numBytes);
