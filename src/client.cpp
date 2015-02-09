@@ -93,8 +93,8 @@ Client::run()
     std::cout << "Connecting to " << peerPort << std::endl; 
 
     int peerSock = socket(AF_INET, SOCK_STREAM, 0);
-
     connectPeer(peerSock, peer.ip, peerPort);
+
     std::cout << "Connected to " << peerPort << std::endl; 
 
     peerProcedure(peerSock);
@@ -418,19 +418,16 @@ Client::peerProcedure(int peerSock)
 
   // TODO: error checking, retry here if msg is corrupted
 
-  // sanity check peerId
-  // if (peerId != hsRsp.getPeerId()) {
-  //   std::cout << "Mismatch peer ID in handshake with peer " << std::endl;
-  //   // pthread_exit(NULL);
-  //   return;
-  // }
-
   // TODO: compare ptrs correctly?
-  if (m_metaInfo.getHash() != hsRsp.getInfoHash()) {
+  if (memcmp(m_metaInfo.getHash()->buf(), 
+             hsRsp.getInfoHash()->buf(), 
+             20) != 0) {
     std::cout << "Detected incorrect info hash with peer " << std::endl;
     // pthread_exit(NULL);
     return;
   }
+
+  std::cout << "Info hash match" << std::endl;
 
   // Send bit field
 
@@ -484,8 +481,6 @@ Client::waitForResponse(int sockfd, int responseLen)
     else
       obuf.write(buf, status);
   }  
-
-  // std::cout << obuf.size() << std::endl;
 
   return obuf.buf();
 }
