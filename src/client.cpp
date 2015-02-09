@@ -464,6 +464,7 @@ Client::peerProcedure(int peerSock)
 ConstBufferPtr
 Client::waitForResponse(int sockfd, int responseLen)
 {
+
   OBufferStream obuf;
   int status;
   int total=0;
@@ -478,12 +479,14 @@ Client::waitForResponse(int sockfd, int responseLen)
 
     total += status;
 
-    std::cout << sizeof(buf) << std::endl;
-
-    obuf << buf;
+    if (status >= 512)
+      obuf << buf;
+    else
+      obuf.write(buf, status);
   }  
 
-  std::cout << sizeof(obuf.buf()) << std::endl;
+  // std::cout << obuf.size() << std::endl;
+
   return obuf.buf();
 }
 
