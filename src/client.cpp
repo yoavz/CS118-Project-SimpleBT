@@ -410,9 +410,11 @@ Client::peerProcedure(int peerSock)
     return;
   }
 
+  std::cout << "got handshake" << std::endl;
+  std::cout << resp->size() << std::endl;
+
   msg::HandShake hsRsp;
   hsRsp.decode(resp);
-  std::cout << "got handshake" << std::endl;
 
   // TODO: error checking, retry here if msg is corrupted
 
