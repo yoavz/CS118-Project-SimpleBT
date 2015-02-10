@@ -58,4 +58,36 @@ Buffer::print(std::ostream& os) const
   StringSource(&front(), size(), true, new HexEncoder(new FileSink(os), false));
 }
 
+bool equal(ConstBufferPtr a, ConstBufferPtr b)
+{
+  if (a->size() != b->size())
+    return false;
+
+  std::vector<uint8_t> a_v = *a;
+  std::vector<uint8_t> b_v = *b;
+  
+  for (int i=0; i < a_v.size(); i++) {
+    if (a_v.at(i) != b_v.at(i))
+      return false;
+  }
+
+  return true;
+}
+
+bool equal(ConstBufferPtr a, const std::vector<uint8_t>& b)
+{
+  std::vector<uint8_t> a_v = *a;
+
+  if (a_v.size() != b.size())
+    return false;
+
+  for (int i=0; i < a_v.size(); i++) {
+    if (a_v.at(i) != b.at(i))
+      return false;
+  }
+
+  return true;
+
+}
+
 } // namespace sbt

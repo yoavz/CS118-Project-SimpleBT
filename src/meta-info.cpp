@@ -237,4 +237,20 @@ MetaInfo::getHash()
   return util::sha1(os.buf());
 }
 
+std::vector<uint8_t>
+MetaInfo::getHashOfPiece(int index)
+{
+  if (index >= getNumPieces()) 
+  {
+    std::cout << "Error: requested out of index piece" << std::endl;
+    return std::vector<uint8_t>(0);
+  }
+
+  std::vector<uint8_t> chunkHash(20);
+  for (int i = 0; i < 20; i++)
+    chunkHash.push_back(index*20+i);
+
+  return chunkHash;
+}
+
 } // namespace sbt

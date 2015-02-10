@@ -128,6 +128,9 @@ public:
   print(std::ostream& os) const;
 };
 
+bool equal(ConstBufferPtr a, ConstBufferPtr b);
+bool equal(ConstBufferPtr a, const std::vector<uint8_t>& b);
+
 } // namespace sbt
 
 #endif // SBT_UTIL_BUFFER_HPP

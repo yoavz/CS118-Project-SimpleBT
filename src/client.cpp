@@ -528,18 +528,8 @@ Client::peerProcedure(Peer *peer)
   msg::Piece piece_struct;
   piece_struct.decode(piece);
 
-  std::vector<uint8_t> recievedHash = *util::sha1(piece_struct.getBlock());
-  std::cout << "block length: " << piece_struct.getBlock()->size() << std::endl;
-  std::vector<uint8_t> ourHash = m_metaInfo.getPieces(); 
-
-  for (int i=0; i<20; i++) {
-    uint8_t a = recievedHash.at(i);
-    uint8_t b = ourHash.at(i);
-    if (a != b) {
-      std::cout << "difference at " << i << std::endl;
-      std::cout << a << " " << b << std::endl;
-      return;
-    }
+  if (!equal(util::sha1(piece_struct.getBlock()), m_metaInfo.getHashOfPiece(0))) {
+    std::cout << "difference in hash" << std::endl ;
   }
 
   std::cout << "same hash!" << std::endl;

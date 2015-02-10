@@ -86,6 +86,9 @@ public:
   std::vector<uint8_t>
   getPieces();
 
+  std::vector<uint8_t>
+  getHashOfPiece(int index);
+
   void
   setLength(int64_t length);
 
@@ -106,6 +109,14 @@ public:
 
   ConstBufferPtr
   getHash();
+
+  int
+  getNumPieces()
+  {
+    int64_t fileLength = getLength();
+    int64_t pieceLength = getPieceLength();
+    return fileLength / pieceLength + (fileLength % pieceLength == 0 ? 0 : 1);
+  }
 
 private:
   static const std::string ANNOUNCE;
