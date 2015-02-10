@@ -78,6 +78,9 @@ bool equal(ConstBufferPtr a, const std::vector<uint8_t>& b)
 {
   std::vector<uint8_t> a_v = *a;
 
+  std::cout << a_v.size() << std::endl;
+  std::cout << b.size() << std::endl;
+
   if (a_v.size() != b.size())
     return false;
 
