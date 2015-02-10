@@ -430,7 +430,7 @@ Client::peerProcedure(Peer *peer)
   // TODO: if multithreading, this is a critical section
   
   // construct a bitfield
-  int numPieces = m_metaInfo.getPieces().size();
+  int numPieces = 23;
   int numBytes = numPieces/8 + (numPieces%8 == 0 ? 0 : 1);
 
   // TODO: remove once you fix prepare file bug
