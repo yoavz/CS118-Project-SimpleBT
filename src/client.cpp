@@ -494,7 +494,7 @@ Client::waitForResponse(int sockfd, int responseLen)
       return NULL;
     }
 
-    std::cout << buf << std::endl;
+    std::cout.write(buf, 50);
     total += status;
 
     if (status >= 512)
