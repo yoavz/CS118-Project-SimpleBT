@@ -516,6 +516,8 @@ Client::peerProcedure(Peer *peer)
   ConstBufferPtr r_buf = request.encode();
   send(peerSock, r_buf->buf(), r_buf->size(), 0);
 
+  std::cout << m_metaInfo.getPieceLength();
+
   ConstBufferPtr piece = std::make_shared<Buffer> (1024, 1);
   if ((piece = waitForResponse(peerSock, m_metaInfo.getPieceLength())) == NULL) 
   {
