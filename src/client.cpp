@@ -472,10 +472,39 @@ Client::peerProcedure(Peer *peer)
   msg::Bitfield bf_resp;
   bf_resp.decode(bitfieldResp);
   peer->setBitfield(bf_resp.getBitfield(), numPieces);
+  std::cout << "recieved/parsed bitfield" << std::endl;
 
-  std::cout << "recieved bitfield" << std::endl;
+  // TODO: more critical section 
+  bool foundPiece = false;
+  for (int i=0; i<numPieces; i++) {
+    if (!m_piecesDone.at(i) && peer->hasPiece(i)) {
+      peer->setActivePiece(i);
+      foundPiece = true;
+      break;
+    }
+  }
 
-  free(bitfield);
+  if (!foundPiece) {
+    std::cout << "Did not find a piece with peer" << std::endl;
+    // pthread_exit(NULL);
+    return;
+  }
+
+  msg::Interested interested;
+  ConstBufferPtr int_buf = interested.encode();
+  send(peerSock, int_buf->buf(), int_buf->size(), 0);
+
+  ConstBufferPtr unchokeResp = std::make_shared<Buffer> (1024, 1);
+  if ((unchokeResp = waitForResponse(peerSock, 1)) == NULL) {
+    std::cout << "Resp error in peer " << std::endl;
+    // pthread_exit(NULL);
+    return;
+  }
+
+  // check that it's the right message
+  // TODO: add try catch here?
+  msg::Unchoke unchoke;
+  unchoke.decode(unchokeResp);
 
   return;
 }

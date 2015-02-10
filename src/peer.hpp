@@ -66,6 +66,23 @@ public:
     m_port = port;
   }
 
+  bool
+  hasPiece(int pieceNum)
+  {
+    return m_piecesDone.at(pieceNum);
+  }
+
+  int
+  getActivePiece()
+  {
+    return m_activePiece;
+  }
+
+  void
+  setActivePiece(int pieceNum)
+  {
+    m_activePiece = pieceNum;
+  }
 
 private:
   int m_sock;
