@@ -517,7 +517,7 @@ Client::peerProcedure(Peer *peer)
   send(peerSock, r_buf->buf(), r_buf->size(), 0);
 
   ConstBufferPtr piece;
-  if ((piece = waitForResponse(peerSock, m_metaInfo.getPieceLength())) == NULL) 
+  if ((piece = waitForResponse(peerSock, m_metaInfo.getPieceLength()+9)) == NULL) 
   {
     std::cout << "Resp error in peer " << std::endl;
     // pthread_exit(NULL);
@@ -525,13 +525,16 @@ Client::peerProcedure(Peer *peer)
   }
 
   std::cout << "recieved the piece! length: " << piece->size() << std::endl;
+  msg::Piece piece_struct;
+  piece_struct.decode(piece);
 
-  std::vector<uint8_t> recievedHash = *util::sha1(piece);
+  std::vector<uint8_t> recievedHash = *util::sha1(piece_struct.getBlock());
+  std::cout << "block length: " << piece_struct.getBlock()->size() << std::endl;
   std::vector<uint8_t> ourHash = m_metaInfo.getPieces(); 
 
   for (int i=0; i<20; i++) {
     uint8_t a = recievedHash.at(i);
-    uint8_t b = recievedHash.at(i);
+    uint8_t b = ourHash.at(i);
     if (a != b) {
       std::cout << "difference at " << i << std::endl;
       std::cout << a << " " << b << std::endl;
