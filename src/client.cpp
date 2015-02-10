@@ -461,10 +461,10 @@ Client::peerProcedure(Peer *peer)
 
   std::cout << "constructed bitfield " << bf->size() << " " << numBytes << std::endl;
   std::cout << "numPieces: " << numPieces << std::endl;
-  send(peerSock, bf->buf(), bf->size()-1, 0);
+  send(peerSock, bf->buf(), bf->size(), 0);
 
   ConstBufferPtr bitfieldResp = std::make_shared<Buffer> (1024, 1);
-  if ((bitfieldResp = waitForResponse(peerSock, bf->size()-1)) == NULL) {
+  if ((bitfieldResp = waitForResponse(peerSock, bf->size())) == NULL) {
     std::cout << "Resp error in peer " << std::endl;
     // pthread_exit(NULL);
     return;
