@@ -437,7 +437,6 @@ Client::peerProcedure(Peer *peer)
   for (int i=0; i<numPieces; i++)
     m_piecesDone.push_back(false);
 
-  std::cout << numPieces << " " << numBytes << std::endl;
   char *bitfield = (char *) malloc(numBytes);
   memset(bitfield, 0, numBytes);
 
@@ -458,7 +457,10 @@ Client::peerProcedure(Peer *peer)
   msg::Bitfield bf(bfstream.buf());
   ConstBufferPtr bf2 = bf.encode();
   std::cout << "constructed bitfield" << std::endl;
+
   send(peerSock, bf2->buf(), bf2->size(), 0);
+
+  std::cout << "sent bitfield" << std::endl;
 
   ConstBufferPtr bitfieldResp = std::make_shared<Buffer> (1024, 1);
   if ((bitfieldResp = waitForResponse(peerSock, bf2->size())) == NULL) {
@@ -484,13 +486,11 @@ Client::waitForResponse(int sockfd, int responseLen)
   char buf[512] = {0};
 
   while (total < responseLen) {
-    memset(buf, 0, sizeof(buf));
+    memset(buf, '\0', sizeof(buf));
     if ((status = recv(sockfd, buf, 512, 0)) == -1) {
       perror("recv");
       return NULL;
     }
-
-    std::cout << buf << std::endl;
 
     total += status;
 
