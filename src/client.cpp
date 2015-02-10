@@ -526,18 +526,17 @@ Client::peerProcedure(Peer *peer)
 
   std::cout << "recieved the piece!" << std::endl;
 
-  const char *recievedHash = (const char *)util::sha1(piece)->buf();
-  const char *ourHash = (const char *)&m_metaInfo.getPieces()[0];
+  std::vector<uint8_t> recievedHash = *piece;
+  std::vector<uint8_t> ourHash = m_metaInfo.getPieces(); 
 
-  std::cout << memcmp( recievedHash, ourHash, 20) <<std::endl;
-   
-  std::cout << recievedHash << std::endl;
-  std::cout << ourHash<< std::endl;
+  for (int i=0; i<20; i++) {
+    if (recievedHash.at(i) != ourHash.at(i)) {
+      std::cout << "difference at " << i << std::endl;
+      return;
+    }
+  }
 
-  //
-  // std::vector<uint8_t> temp = m_metaInfo.getPieces();
-  // ConstBufferPtr ourHash = std::make_shared<const Buffer> (temp);; 
-
+  std::cout << "same hash!" << std::endl;
 
   return;
 }
