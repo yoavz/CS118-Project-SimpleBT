@@ -526,7 +526,7 @@ Client::peerProcedure(Peer *peer)
 
   std::cout << "recieved the piece!" << std::endl;
 
-  std::vector<uint8_t> recievedHash = *piece;
+  std::vector<uint8_t> recievedHash = *util::sha1(piece);
   std::vector<uint8_t> ourHash = m_metaInfo.getPieces(); 
 
   for (int i=0; i<20; i++) {
