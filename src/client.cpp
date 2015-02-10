@@ -524,8 +524,18 @@ Client::peerProcedure(Peer *peer)
     return;
   }
 
-  sha1(piece.buf())
   std::cout << "recieved the piece!" << std::endl;
+
+  const char *recievedHash = (const char *)util::sha1(piece)->buf();
+  const char *ourHash = (const char *)&m_metaInfo.getPieces()[0];
+
+  std::cout << recievedHash << std::endl;
+  std::cout << ourHash<< std::endl;
+
+  //
+  // std::vector<uint8_t> temp = m_metaInfo.getPieces();
+  // ConstBufferPtr ourHash = std::make_shared<const Buffer> (temp);; 
+
 
   return;
 }
