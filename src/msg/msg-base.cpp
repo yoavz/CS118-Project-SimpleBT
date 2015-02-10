@@ -219,7 +219,10 @@ Bitfield::encode()
     return std::make_shared<Buffer>(4, 0);
 
   uint32_t hLength;
-  hLength = m_payload->size()*8 + 1;
+  if (static_cast<bool>(m_payload))
+    hLength = m_payload->size() + 1;
+  else
+    hLength = 1;
 
   encodeUint32(os, hLength);
   os.put(m_id);
