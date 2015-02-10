@@ -436,10 +436,6 @@ Client::peerProcedure(Peer *peer)
   int numPieces = fileLength / pieceLength + (fileLength % pieceLength == 0 ? 0 : 1);
   int numBytes = numPieces/8 + (numPieces%8 == 0 ? 0 : 1);
 
-  // TODO: remove once you fix prepare file bug
-  for (int i=0; i<numPieces; i++)
-    m_piecesDone.push_back(false);
-
   char *bitfield = (char *) malloc(numBytes);
   memset(bitfield, 0, numBytes);
 
@@ -463,12 +459,16 @@ Client::peerProcedure(Peer *peer)
   std::cout << "constructed bitfield " << bf->size() << " " << numBytes << std::endl;
   send(peerSock, bf->buf(), bf->size(), 0);
 
+
+  peer->waitOnMessage();
+  return;
+
   ConstBufferPtr bitfieldResp = std::make_shared<Buffer> (1024, 1);
-  if ((bitfieldResp = waitForResponse(peerSock, bf->size())) == NULL) {
-    std::cout << "Resp error in peer " << std::endl;
-    // pthread_exit(NULL);
-    return;
-  }
+  // if ((bitfieldResp = waitForResponse(peerSock, bf->size())) == NULL) {
+  //   std::cout << "Resp error in peer " << std::endl;
+  //   // pthread_exit(NULL);
+  //   return;
+  // }
 
   msg::Bitfield bf_resp;
   bf_resp.decode(bitfieldResp);

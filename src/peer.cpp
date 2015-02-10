@@ -1,7 +1,10 @@
 // #include <string.h>
 // #include <stdio.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <stdio.h>
+
 #include "peer.hpp"
 
 namespace sbt {
@@ -22,6 +25,25 @@ void
 Peer::handshakeAndRun()
 {
   return;
+}
+
+int
+Peer::waitOnMessage()
+{
+  int status;
+
+  // first, we wait on a length and ID, which will always be 5 bytes
+  char *lengthAndID = (char *) malloc (sizeof(char) * 5);
+  if ((status = recv(m_sock, lengthAndID, 5, 0)) == -1) {
+    perror("recv");
+    return -1;
+  }
+
+  // get the length
+  uint32_t length = ntohl(*reinterpret_cast<uint32_t *> (lengthAndID));
+  std::cout << length << std::endl;
+
+  return 0;
 }
 
 void

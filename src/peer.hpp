@@ -84,6 +84,9 @@ public:
     m_activePiece = pieceNum;
   }
 
+  int
+  waitOnMessage();
+
 private:
   int m_sock;
   int m_activePiece;
@@ -96,6 +99,9 @@ private:
 
   std::vector<bool> m_piecesDone;
   ConstBufferPtr m_bitfield;
+
+private:
+
 };
 
 } // namespace sbt
