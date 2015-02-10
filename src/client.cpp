@@ -480,6 +480,7 @@ Client::peerProcedure(Peer *peer)
     if (!m_piecesDone.at(i) && peer->hasPiece(i)) {
       peer->setActivePiece(i);
       foundPiece = true;
+      std::cout << "Found needed piece " << i << std::endl;
       break;
     }
   }
@@ -523,6 +524,7 @@ Client::peerProcedure(Peer *peer)
     return;
   }
 
+  sha1(piece.buf())
   std::cout << "recieved the piece!" << std::endl;
 
   return;
