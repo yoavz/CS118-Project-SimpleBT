@@ -243,10 +243,10 @@ MetaInfo::getHashOfPiece(int index)
   if (index >= getNumPieces()) 
   {
     std::cout << "Error: requested out of index piece" << std::endl;
-    return std::vector<uint8_t>(0);
+    return std::vector<uint8_t>();
   }
 
-  std::vector<uint8_t> chunkHash(20);
+  std::vector<uint8_t> chunkHash;
   for (int i = 0; i < 20; i++)
     chunkHash.push_back(getPieces().at(index*20+i));
 
