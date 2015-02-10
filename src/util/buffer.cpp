@@ -82,8 +82,11 @@ bool equal(ConstBufferPtr a, const std::vector<uint8_t>& b)
     return false;
 
   for (int i=0; i < a_v.size(); i++) { 
-    if (a_v.at(i) != b.at(i))
+    std::cout << i << std::endl;
+    if (a_v.at(i) != b.at(i)) {
+      std::cout << "difference in " << i << std::endl;
       return false;
+    }
   }
 
   return true;
