@@ -367,7 +367,11 @@ Client::prepareFile()
               i == pieceCount-1 ? finalPieceLength : pieceLength,
               m_torrentFile);
 
+        std::cout << "fread" << i << std::endl;
+
         ConstBufferPtr pieceBuf = std::make_shared<const Buffer> (pBuf, pieceLength);
+
+        std::cout << "make_shared" << i << std::endl;
 
         if (equal(util::sha1(pieceBuf), m_metaInfo.getHashOfPiece(i))) {
           m_piecesDone.at(i) = true;
