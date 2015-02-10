@@ -532,6 +532,7 @@ Client::peerProcedure(Peer *peer)
   for (int i=0; i<20; i++) {
     if (recievedHash.at(i) != ourHash.at(i)) {
       std::cout << "difference at " << i << std::endl;
+      std::cout << recievedHash.at(i) << " " << ourHash.at(i) << std::endl;
       return;
     }
   }
