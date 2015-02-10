@@ -564,10 +564,14 @@ Client::waitForResponse(int sockfd, int responseLen)
 
     total += status;
 
-    if (status >= 512)
+    if (status == 0) {
       obuf << buf;
-    else
+      break;
+    } else if (status >= 512) {
+      obuf << buf;
+    } else {
       obuf.write(buf, status);
+    }
   }  
 
   return obuf.buf();
