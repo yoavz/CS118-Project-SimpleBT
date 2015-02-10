@@ -40,9 +40,15 @@ Peer::waitOnMessage()
     return -1;
   }
 
-  // get the length
+  // first 4 bytes are the length
   uint32_t length = ntohl(*reinterpret_cast<uint32_t *> (lengthAndID));
+
   std::cout << length << std::endl;
+
+  // next byte is the ID 
+  uint8_t id = *(lengthAndID+4);
+
+  std::cout << id << std::endl;
 
   return 0;
 }
