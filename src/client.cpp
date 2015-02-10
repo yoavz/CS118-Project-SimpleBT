@@ -568,6 +568,7 @@ Client::waitForResponse(int sockfd, int responseLen)
       obuf.write(buf, status);
   }  
 
+  std::cout << obuf.buf()->size() << std::endl;
   return obuf.buf();
 }
 
