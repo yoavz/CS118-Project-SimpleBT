@@ -530,9 +530,11 @@ Client::peerProcedure(Peer *peer)
   std::vector<uint8_t> ourHash = m_metaInfo.getPieces(); 
 
   for (int i=0; i<20; i++) {
-    if (recievedHash.at(i) != ourHash.at(i)) {
+    uint8_t a = recievedHash.at(i);
+    uint8_t b = recievedHash.at(i);
+    if (a != b) {
       std::cout << "difference at " << i << std::endl;
-      std::cout << recievedHash.at(i) << " " << ourHash.at(i) << std::endl;
+      std::cout << a << " " << b << std::endl;
       return;
     }
   }
@@ -560,8 +562,6 @@ Client::waitForResponse(int sockfd, int responseLen)
     }
 
     total += status;
-    std::cout << "got " << status << " bytes" << std::endl;
-    std::cout << "total " << total << std::endl;
 
     obuf.write(buf, status);
   }  
