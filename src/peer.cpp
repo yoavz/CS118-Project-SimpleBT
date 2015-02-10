@@ -19,7 +19,7 @@ Peer::Peer (const std::string& peerId,
 }
 
 void
-Peer::run()
+Peer::handshakeAndRun()
 {
   return;
 }

@@ -17,7 +17,7 @@ public:
         uint16_t port);
 
   void
-  run();
+  handshakeAndRun();
 
   void
   setBitfield(ConstBufferPtr bitfield, int size);
