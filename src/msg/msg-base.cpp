@@ -208,27 +208,27 @@ Bitfield::Bitfield(ConstBufferPtr bitfield)
 {
 }
 
-ConstBufferPtr
-Bitfield::encode()
-{
-  encodePayload();
-
-  OBufferStream os;
-
-  if (m_id == MSG_ID_KEEP_ALIVE)
-    return std::make_shared<Buffer>(4, 0);
-
-  uint32_t hLength;
-  hLength = m_payload->size()*8 + 1;
-
-  encodeUint32(os, hLength);
-  os.put(m_id);
-
-  if (static_cast<bool>(m_payload))
-    os.write(reinterpret_cast<const char*>(m_payload->buf()), m_payload->size());
-
-  return os.buf();
-}
+// ConstBufferPtr
+// Bitfield::encode()
+// {
+//   encodePayload();
+//
+//   OBufferStream os;
+//
+//   if (m_id == MSG_ID_KEEP_ALIVE)
+//     return std::make_shared<Buffer>(4, 0);
+//
+//   uint32_t hLength;
+//   hLength = m_payload->size()*8 + 1;
+//
+//   encodeUint32(os, hLength);
+//   os.put(m_id);
+//
+//   if (static_cast<bool>(m_payload))
+//     os.write(reinterpret_cast<const char*>(m_payload->buf()), m_payload->size());
+//
+//   return os.buf();
+// }
 
 Piece::Piece()
   : MsgBase(MSG_ID_PIECE)

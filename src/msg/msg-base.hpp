@@ -257,8 +257,8 @@ public:
     m_bitfield = getPayload();
   }
 
-  ConstBufferPtr
-  encode();
+  // ConstBufferPtr
+  // encode();
 
 private:
   ConstBufferPtr m_bitfield;
