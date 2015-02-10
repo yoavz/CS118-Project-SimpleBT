@@ -516,8 +516,6 @@ Client::peerProcedure(Peer *peer)
   ConstBufferPtr r_buf = request.encode();
   send(peerSock, r_buf->buf(), r_buf->size(), 0);
 
-  std::cout << m_metaInfo.getPieceLength();
-
   ConstBufferPtr piece;
   if ((piece = waitForResponse(peerSock, m_metaInfo.getPieceLength())) == NULL) 
   {
@@ -560,18 +558,14 @@ Client::waitForResponse(int sockfd, int responseLen)
       return NULL;
     }
 
-    std::cout << "got " << status << " bytes" << std::endl;
-
     total += status;
+    std::cout << "got " << status << " bytes" << std::endl;
+    std::cout << "total " << total << std::endl;
 
-    if (status == 0) {
+    if (status >= 512)
       obuf << buf;
-      break;
-    } else if (status >= 512) {
-      obuf << buf;
-    } else {
+    else
       obuf.write(buf, status);
-    }
   }  
 
   return obuf.buf();
