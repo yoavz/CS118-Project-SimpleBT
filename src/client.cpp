@@ -452,11 +452,12 @@ Client::peerProcedure(Peer *peer)
     } 
   }
 
+  numBytes--;
+
   OBufferStream bfstream;
   // const char bf_id = 5;
   // bfstream.write(&bf_id, 1);
   bfstream.write(bitfield, numBytes);
-  std::cout << bfstream.buf()->size() << std::endl;
   msg::Bitfield bf_struct(bfstream.buf());
   ConstBufferPtr bf = bf_struct.encode();
 
