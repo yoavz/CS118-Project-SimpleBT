@@ -453,8 +453,8 @@ Client::peerProcedure(Peer *peer)
   }
 
   OBufferStream bfstream;
-  uint8_t bf_id = 5;
-  bfstream.write((const char *)bf_id, 1);
+  const char bf_id = 5;
+  bfstream.write(&bf_id, 1);
   bfstream.write(bitfield, numBytes);
   ConstBufferPtr bf = bfstream.buf();
 
