@@ -248,7 +248,7 @@ MetaInfo::getHashOfPiece(int index)
 
   std::vector<uint8_t> chunkHash(20);
   for (int i = 0; i < 20; i++)
-    chunkHash.push_back(index*20+i);
+    chunkHash.push_back(getPieces().at(index*20+i));
 
   return chunkHash;
 }

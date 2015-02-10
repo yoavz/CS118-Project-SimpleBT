@@ -529,6 +529,7 @@ Client::peerProcedure(Peer *peer)
   piece_struct.decode(piece);
   std::cout << "block length: " << piece_struct.getBlock()->size() << std::endl;
 
+
   if (!equal(util::sha1(piece_struct.getBlock()), m_metaInfo.getHashOfPiece(0))) {
     std::cout << "difference in hash" << std::endl ;
   } else {

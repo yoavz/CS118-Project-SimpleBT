@@ -41,6 +41,20 @@ BOOST_AUTO_TEST_CASE(Print)
   BOOST_CHECK_EQUAL("0123456789abcdef", ss.str());
 }
 
+BOOST_AUTO_TEST_CASE(Equal)
+{
+  uint8_t hash[] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef};
+  Buffer buffer(hash, sizeof(hash));
+
+  uint8_t hash2[] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef};
+  Buffer buffer2(hash2, sizeof(hash2));
+
+  uint8_t hash3[] = {0x01, 0x23, 0x46, 0x67, 0x89, 0xab, 0xcd, 0xef};
+  Buffer buffer3(hash3, sizeof(hash3));
+
+  BOOST_CHECK_EQUAL(equal(buffer1, buffer2), true);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test
