@@ -552,6 +552,7 @@ Client::waitForResponse(int sockfd, int responseLen)
   char buf[512] = {0};
 
   while (total < responseLen) {
+
     memset(buf, '\0', sizeof(buf));
     if ((status = recv(sockfd, buf, 512, 0)) == -1) {
       perror("recv");
@@ -562,10 +563,7 @@ Client::waitForResponse(int sockfd, int responseLen)
     std::cout << "got " << status << " bytes" << std::endl;
     std::cout << "total " << total << std::endl;
 
-    if (status >= 512)
-      obuf << buf;
-    else
-      obuf.write(buf, status);
+    obuf.write(buf, status);
   }  
 
   std::cout << obuf.buf()->size() << std::endl;
