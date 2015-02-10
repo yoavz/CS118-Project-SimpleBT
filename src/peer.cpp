@@ -1,6 +1,7 @@
 // #include <string.h>
 // #include <stdio.h>
 
+#include <stdio.h>
 #include "peer.hpp"
 
 namespace sbt {
@@ -28,8 +29,9 @@ Peer::setBitfield(ConstBufferPtr bf, int size)
 {
   m_piecesDone = std::vector<bool> (size);
   const char *bitfield = (const char *)bf->buf();
+  memset(&bitfield, 0, size);
 
-  std::cout.write(bitfield, 4);
+  // std::cout.write(bitfield, 4);
 
   for (int count=0; count < size; count++) {
     if (*bitfield & (1 << (size-count))) {
