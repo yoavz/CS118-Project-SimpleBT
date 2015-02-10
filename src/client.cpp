@@ -448,16 +448,20 @@ Client::peerProcedure(Peer *peer)
     bitNum = count % 8;
 
     if (m_piecesDone.at(count)) {
+      std::cout << "setting piece " << count << std::endl;
       *(bitfield+byteNum) |= 1 << (7-bitNum);
     } 
   }
 
+  OBufferStream bfstream;
+  bfstream.write(bitfield, numBytes);
+  msg::Bitfield bf(bfstream.buf());
+  ConstBufferPtr bf2 = bf.encode();
   std::cout << "constructed bitfield" << std::endl;
-  send(peerSock, bitfield, numBytes, 0);
+  send(peerSock, bf2->buf(), bf2->size(), 0);
 
   ConstBufferPtr bitfieldResp = std::make_shared<Buffer> (1024, 1);
-
-  if ((bitfieldResp = waitForResponse(peerSock, numBytes)) == NULL) {
+  if ((bitfieldResp = waitForResponse(peerSock, bf2->size())) == NULL) {
     std::cout << "Resp error in peer " << std::endl;
     // pthread_exit(NULL);
     return;
