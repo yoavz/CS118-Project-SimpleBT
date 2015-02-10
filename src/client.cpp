@@ -524,7 +524,7 @@ Client::peerProcedure(Peer *peer)
     return;
   }
 
-  std::cout << "recieved the piece!" << std::endl;
+  std::cout << "recieved the piece! length: " << piece->size() << std::endl;
 
   std::vector<uint8_t> recievedHash = *util::sha1(piece);
   std::vector<uint8_t> ourHash = m_metaInfo.getPieces(); 
