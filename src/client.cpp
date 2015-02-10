@@ -492,6 +492,8 @@ Client::peerProcedure(Peer *peer)
 
   msg::Interested interested;
   ConstBufferPtr int_buf = interested.encode();
+
+  std::cout << "sending interested" << std::endl;
   send(peerSock, int_buf->buf(), int_buf->size(), 0);
 
   ConstBufferPtr unchokeResp = std::make_shared<Buffer> (1024, 1);
@@ -505,6 +507,23 @@ Client::peerProcedure(Peer *peer)
   // TODO: add try catch here?
   msg::Unchoke unchoke;
   unchoke.decode(unchokeResp);
+
+  std::cout << "got unchoke" << std::endl;
+
+  // TODO: handle half pieces
+  msg::Request request(peer->getActivePiece(), 0, m_metaInfo.getPieceLength());
+  ConstBufferPtr r_buf = request.encode();
+  send(peerSock, r_buf->buf(), r_buf->size(), 0);
+
+  ConstBufferPtr piece = std::make_shared<Buffer> (1024, 1);
+  if ((piece = waitForResponse(peerSock, m_metaInfo.getPieceLength())) == NULL) 
+  {
+    std::cout << "Resp error in peer " << std::endl;
+    // pthread_exit(NULL);
+    return;
+  }
+
+  std::cout << "recieved the piece!" << std::endl;
 
   return;
 }
