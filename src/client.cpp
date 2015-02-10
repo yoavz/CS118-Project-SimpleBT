@@ -336,6 +336,7 @@ Client::prepareFile()
   if (finalPieceLength == 0) finalPieceLength = pieceLength;
 
   std::cout << "Piece count: " << pieceCount << std::endl ;
+  std::cout << "Piece length: " << pieceLength << std::endl ;
   std::cout << "File length: " << fileLength << std::endl ;
 
   // initialize all pieces to false
@@ -353,21 +354,21 @@ Client::prepareFile()
     fseek(m_torrentFile, 0, SEEK_END);
     // and if it's the proper size
     if (ftell(m_torrentFile) == fileLength) {
-      fseek(m_torrentFile, 0, SEEK_SET);
+      rewind(m_torrentFile);
 
       std::cout << "found file of proper size" << std::endl;
 
-      char *pBuf = new char[pieceLength];
+      char *pBuf = (char *)malloc(sizeof(char) * pieceLength);
 
       for (int i=0; i<pieceCount; i++) {
+
         std::cout << "checking piece " << i << std::endl;
 
-        fread(pBuf, 
-              pieceLength, 
-              i == pieceCount-1 ? finalPieceLength : pieceLength,
-              m_torrentFile);
+        fread(pBuf, 1, i == pieceCount-1 ? finalPieceLength : pieceLength, m_torrentFile);
 
         std::cout << "fread " << i << std::endl;
+
+        // std::cout << sizeof(*pBuf) << std::endl;
 
         OBufferStream os;
         os.write(pBuf, pieceLength);
