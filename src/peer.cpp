@@ -23,4 +23,20 @@ Peer::run()
   return;
 }
 
+void
+Peer::setBitfield(ConstBufferPtr bf, int size)
+{
+  m_piecesDone = std::vector<bool> (size);
+  const char *bitfield = (const char *)bf->buf();
+
+  for (int count=0; count < size; count++) {
+    if (*bitfield & (1 << (size-count))) {
+      std::cout << "detected piece: " << count << std::endl;
+      m_piecesDone.at(count) = true;
+    } else {
+      m_piecesDone.at(count) = false;
+    }
+  }
+}
+
 } // namespace sbt

@@ -19,6 +19,9 @@ public:
   void
   run();
 
+  void
+  setBitfield(ConstBufferPtr bitfield, int size);
+
 public:
 
   int
@@ -63,6 +66,7 @@ public:
     m_port = port;
   }
 
+
 private:
   int m_sock;
   int m_activePiece;
@@ -74,6 +78,7 @@ private:
   uint16_t m_port;
 
   std::vector<bool> m_piecesDone;
+  ConstBufferPtr m_bitfield;
 };
 
 } // namespace sbt

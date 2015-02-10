@@ -469,6 +469,10 @@ Client::peerProcedure(Peer *peer)
     return;
   }
 
+  msg::Bitfield bf_resp;
+  bf_resp.decode(bitfieldResp);
+  peer->setBitfield(bf_resp.getBitfield(), numPieces);
+
   std::cout << "recieved bitfield" << std::endl;
 
   free(bitfield);
