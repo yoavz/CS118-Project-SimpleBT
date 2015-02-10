@@ -430,7 +430,9 @@ Client::peerProcedure(Peer *peer)
   // TODO: if multithreading, this is a critical section
   
   // construct a bitfield
-  int numPieces = 23;
+  int64_t fileLength = m_metaInfo.getLength();
+  int64_t pieceLength = m_metaInfo.getPieceLength();
+  int numPieces = fileLength / pieceLength + (fileLength % pieceLength == 0 ? 0 : 1);
   int numBytes = numPieces/8 + (numPieces%8 == 0 ? 0 : 1);
 
   // TODO: remove once you fix prepare file bug
@@ -440,27 +442,24 @@ Client::peerProcedure(Peer *peer)
   char *bitfield = (char *) malloc(numBytes);
   memset(bitfield, 0, numBytes);
 
-  // int byteNum, bitNum;
-  // for (int count=0; count < numPieces; count++)
-  // {
-  //   byteNum = count / 8;    
-  //   bitNum = count % 8;
-  //
-  //   if (m_piecesDone.at(count)) {
-  //     // std::cout << "setting piece " << count << std::endl;
-  //     *(bitfield+byteNum) |= 1 << (7-bitNum);
-  //   } 
-  // }
+  int byteNum, bitNum;
+  for (int count=0; count < numPieces; count++)
+  {
+    byteNum = count / 8;    
+    bitNum = count % 8;
+
+    if (m_piecesDone.at(count)) {
+      // std::cout << "setting piece " << count << std::endl;
+      *(bitfield+byteNum) |= 1 << (7-bitNum);
+    } 
+  }
 
   OBufferStream bfstream;
-  // const char bf_id = 5;
-  // bfstream.write(&bf_id, 1);
   bfstream.write(bitfield, numBytes);
   msg::Bitfield bf_struct(bfstream.buf());
   ConstBufferPtr bf = bf_struct.encode();
 
   std::cout << "constructed bitfield " << bf->size() << " " << numBytes << std::endl;
-  std::cout << "numPieces: " << numPieces << std::endl;
   send(peerSock, bf->buf(), bf->size(), 0);
 
   ConstBufferPtr bitfieldResp = std::make_shared<Buffer> (1024, 1);
@@ -470,8 +469,7 @@ Client::peerProcedure(Peer *peer)
     return;
   }
 
-  std::cout << "recieved bitfield resp" << std::endl;
-  std::cout << bitfieldResp << std::endl;
+  std::cout << "recieved bitfield" << std::endl;
 
   free(bitfield);
 
@@ -494,7 +492,6 @@ Client::waitForResponse(int sockfd, int responseLen)
       return NULL;
     }
 
-    std::cout.write(buf, 50);
     total += status;
 
     if (status >= 512)
