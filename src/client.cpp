@@ -453,16 +453,17 @@ Client::peerProcedure(Peer *peer)
   }
 
   OBufferStream bfstream;
+  uint8_t bf_id = 5;
+  bfstream.write((const char *)bf_id, 1);
   bfstream.write(bitfield, numBytes);
-  msg::Bitfield bf(bfstream.buf());
-  ConstBufferPtr bf2 = bf.encode();
+  ConstBufferPtr bf = bfstream.buf();
 
-  std::cout << "constructed bitfield " << bf2->size() << " " << numBytes << std::endl;
+  std::cout << "constructed bitfield " << bf->size() << " " << numBytes << std::endl;
   std::cout << "numPieces: " << numPieces << std::endl;
-  send(peerSock, bf2->buf(), bf2->size(), 0);
+  send(peerSock, bf->buf(), bf->size(), 0);
 
   ConstBufferPtr bitfieldResp = std::make_shared<Buffer> (1024, 1);
-  if ((bitfieldResp = waitForResponse(peerSock, bf2->size())) == NULL) {
+  if ((bitfieldResp = waitForResponse(peerSock, bf->size())) == NULL) {
     std::cout << "Resp error in peer " << std::endl;
     // pthread_exit(NULL);
     return;
