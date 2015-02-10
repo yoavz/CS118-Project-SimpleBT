@@ -447,16 +447,14 @@ Client::peerProcedure(Peer *peer)
     bitNum = count % 8;
 
     if (m_piecesDone.at(count)) {
-      std::cout << "setting piece " << count << std::endl;
+      // std::cout << "setting piece " << count << std::endl;
       *(bitfield+byteNum) |= 1 << (7-bitNum);
     } 
   }
 
-  numBytes--;
-
   OBufferStream bfstream;
-  // const char bf_id = 5;
-  // bfstream.write(&bf_id, 1);
+  const char bf_id = 5;
+  bfstream.write(&bf_id, 1);
   bfstream.write(bitfield, numBytes);
   msg::Bitfield bf_struct(bfstream.buf());
   ConstBufferPtr bf = bf_struct.encode();
