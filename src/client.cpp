@@ -518,7 +518,7 @@ Client::peerProcedure(Peer *peer)
 
   std::cout << m_metaInfo.getPieceLength();
 
-  ConstBufferPtr piece = std::make_shared<Buffer> (3000, 1);
+  ConstBufferPtr piece;
   if ((piece = waitForResponse(peerSock, m_metaInfo.getPieceLength())) == NULL) 
   {
     std::cout << "Resp error in peer " << std::endl;
@@ -559,6 +559,8 @@ Client::waitForResponse(int sockfd, int responseLen)
       perror("recv");
       return NULL;
     }
+
+    std::cout << "got " << status << " bytes" << std::endl;
 
     total += status;
 
