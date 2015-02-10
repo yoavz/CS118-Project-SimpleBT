@@ -336,6 +336,7 @@ Client::prepareFile()
   if (finalPieceLength == 0) finalPieceLength = pieceLength;
 
   std::cout << "Piece count: " << pieceCount << std::endl ;
+  std::cout << "File length: " << fileLength << std::endl ;
 
   // initialize all pieces to false
   m_piecesDone = std::vector<bool>();
@@ -354,9 +355,13 @@ Client::prepareFile()
     if (ftell(m_torrentFile) == fileLength) {
       fseek(m_torrentFile, 0, SEEK_SET);
 
+      std::cout << "found file of proper size" << std::endl;
+
       char *pBuf = new char[pieceLength];
 
       for (int i=0; i<pieceCount; i++) {
+        std::cout << "checking piece " << i << std::endl;
+
         fread(pBuf, 
               pieceLength, 
               i == pieceCount-1 ? finalPieceLength : pieceLength,
@@ -364,10 +369,14 @@ Client::prepareFile()
 
         ConstBufferPtr pieceBuf = std::make_shared<const Buffer> (pBuf, pieceLength);
 
-        if (equal(util::sha1(pieceBuf), m_metaInfo.getHashOfPiece(i)))
+        if (equal(util::sha1(pieceBuf), m_metaInfo.getHashOfPiece(i))) {
           m_piecesDone.at(i) = true;
-        else
+          std::cout << "piece " << i << " good" << std::endl;
+        }
+        else {
           m_piecesDone.at(i) = false;
+          std::cout << "piece " << i << " bad" << std::endl;
+        }
       }
 
       return;
