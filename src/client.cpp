@@ -494,6 +494,7 @@ Client::waitForResponse(int sockfd, int responseLen)
       return NULL;
     }
 
+    std::cout << buf << std::endl;
     total += status;
 
     if (status >= 512)
