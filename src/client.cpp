@@ -440,17 +440,17 @@ Client::peerProcedure(Peer *peer)
   char *bitfield = (char *) malloc(numBytes);
   memset(bitfield, 0, numBytes);
 
-  int byteNum, bitNum;
-  for (int count=0; count < numPieces; count++)
-  {
-    byteNum = count / 8;    
-    bitNum = count % 8;
-
-    if (m_piecesDone.at(count)) {
-      // std::cout << "setting piece " << count << std::endl;
-      *(bitfield+byteNum) |= 1 << (7-bitNum);
-    } 
-  }
+  // int byteNum, bitNum;
+  // for (int count=0; count < numPieces; count++)
+  // {
+  //   byteNum = count / 8;    
+  //   bitNum = count % 8;
+  //
+  //   if (m_piecesDone.at(count)) {
+  //     // std::cout << "setting piece " << count << std::endl;
+  //     *(bitfield+byteNum) |= 1 << (7-bitNum);
+  //   } 
+  // }
 
   OBufferStream bfstream;
   // const char bf_id = 5;
