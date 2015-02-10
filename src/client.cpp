@@ -518,7 +518,7 @@ Client::peerProcedure(Peer *peer)
 
   std::cout << m_metaInfo.getPieceLength();
 
-  ConstBufferPtr piece = std::make_shared<Buffer> (1024, 1);
+  ConstBufferPtr piece = std::make_shared<Buffer> (3000, 1);
   if ((piece = waitForResponse(peerSock, m_metaInfo.getPieceLength())) == NULL) 
   {
     std::cout << "Resp error in peer " << std::endl;
