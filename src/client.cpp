@@ -529,6 +529,8 @@ Client::peerProcedure(Peer *peer)
   const char *recievedHash = (const char *)util::sha1(piece)->buf();
   const char *ourHash = (const char *)&m_metaInfo.getPieces()[0];
 
+  std::cout << memcmp( recievedHash, ourHash, 20) <<std::endl;
+   
   std::cout << recievedHash << std::endl;
   std::cout << ourHash<< std::endl;
 
