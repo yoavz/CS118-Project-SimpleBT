@@ -527,7 +527,6 @@ Client::peerProcedure(Peer *peer)
   std::cout << "recieved the piece! length: " << piece->size() << std::endl;
   msg::Piece piece_struct;
   piece_struct.decode(piece);
-  std::cout << "block length: " << piece_struct.getBlock()->size() << std::endl;
   ConstBufferPtr piece_sha1 = util::sha1(piece_struct.getBlock());
 
   if (!equal(piece_sha1, m_metaInfo.getHashOfPiece(0))) {
