@@ -92,12 +92,10 @@ public:
 
   void 
   setClientData(std::vector<bool>* clientPiecesDone,
-                std::vector<uint8_t>* piecesHash,
-                ConstBufferPtr infoHash,
+                MetaInfo *metaInfo,
                 FILE *clientFile)
   {
-    m_infoHash = infoHash;
-    m_piecesHash = piecesHash;
+    m_metaInfo = metaInfo;
     m_clientPiecesDone = clientPiecesDone;
     m_clientFile = clientFile;
   }
@@ -120,8 +118,7 @@ private:
   ConstBufferPtr m_bitfield;
 
   // client references
-  ConstBufferPtr m_infoHash;
-  std::vector<uint8_t>* m_piecesHash;
+  MetaInfo *m_metaInfo;
   std::vector<bool>* m_clientPiecesDone;
   FILE *m_clientFile;
 

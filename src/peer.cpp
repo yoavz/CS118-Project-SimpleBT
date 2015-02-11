@@ -51,7 +51,7 @@ Peer::handshakeAndRun()
   }
 
   // send our handshake
-  msg::HandShake hs(m_infoHash, "SIMPLEBT-TEST-PEERID");
+  msg::HandShake hs(m_metaInfo->getHash(), "SIMPLEBT-TEST-PEERID");
   ConstBufferPtr hsMsg = hs.encode();
   send(m_sock, hsMsg->buf(), hsMsg->size(), 0);
 
@@ -62,6 +62,8 @@ Peer::handshakeAndRun()
   }
 
   log("handshake exchange successfull");
+
+  // send our handshake
 
   return;
 }
@@ -124,7 +126,7 @@ Peer::waitOnHandshake()
   setPeerId(hs.getPeerId());
 
   // check the info hashes match. 
-  if (memcmp(m_infoHash->buf(), 
+  if (memcmp(m_metaInfo->getHash()->buf(), 
              hs.getInfoHash()->buf(), 
              20) != 0) {
     log("detected incorrect hash on handshake");

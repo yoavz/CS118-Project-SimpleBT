@@ -88,8 +88,7 @@ Client::run()
         continue;
 
       // set client data
-      std::vector<uint8_t> pieceHash = m_metaInfo.getPieces();
-      peer->setClientData(&m_piecesDone, &pieceHash, m_metaInfo.getHash(), m_torrentFile);
+      peer->setClientData(&m_piecesDone, &m_metaInfo, m_torrentFile);
 
       peer->handshakeAndRun();
 
