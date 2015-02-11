@@ -59,11 +59,11 @@ Client::Client(const std::string& port, const std::string& torrent)
 
   loadMetaInfo(torrent);
 
-  std::cout << "loaded metainfo" << std::endl;
+  // std::cout << "loaded metainfo" << std::endl;
 
   prepareFile();
 
-  std::cout << "prepared file!" << std::endl;
+  // std::cout << "prepared file!" << std::endl;
 
   run();
 }
@@ -76,7 +76,7 @@ Client::run()
   sendTrackerRequest();
   recvTrackerResponse();
 
-  std::cout << "recieved and parsed tracker resp" << std::endl;
+  // std::cout << "recieved and parsed tracker resp" << std::endl;
 
   // attempt connecting to all peers
   for(std::map<std::string, Peer>::iterator it = m_peers.begin(); it != m_peers.end(); it++) {

@@ -269,8 +269,6 @@ Peer::waitOnMessage()
   // next byte is the ID 
   uint8_t id = *(msgBuf+4);
 
-  std::cout << "Parsed message length: " << length << std::endl;
-
   // if there is a body to recieve, wait for it
   if (length > 1) {
     // reallocate the msgBuf to the proper length
@@ -334,7 +332,7 @@ Peer::setBitfield(ConstBufferPtr bf, int size)
 void 
 Peer::log(std::string msg)
 {
-  std::cout << "(" << m_peerId << "): " << msg << std::endl;
+  // std::cout << "(" << m_peerId << "): " << msg << std::endl;
   return;
 }
 
@@ -392,9 +390,9 @@ void Peer::handlePiece(ConstBufferPtr cbf)
   ConstBufferPtr pieceSha1 = util::sha1(piece.getBlock());
   
   if (!equal(pieceSha1, m_metaInfo->getHashOfPiece(piece.getIndex()))) {
-    std::cout << "difference in hash" << std::endl ;
+    log("difference in hash");
   } else {
-    std::cout << "same hash!" << std::endl;
+    log("same hash");
   }
 
   requested = false;
