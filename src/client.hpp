@@ -114,6 +114,7 @@ private:
 
   FILE *m_torrentFile;
   std::vector<bool> m_piecesDone;
+  std::vector<bool> m_piecesLocked;
   
   // list of peers (from tracker)
   std::map<std::string, Peer> m_peers;

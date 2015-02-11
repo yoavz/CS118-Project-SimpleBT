@@ -88,7 +88,10 @@ Client::run()
         continue;
 
       // set client data
-      peer->setClientData(&m_piecesDone, &m_metaInfo, m_torrentFile);
+      peer->setClientData(&m_piecesDone, 
+                          &m_piecesLocked, 
+                          &m_metaInfo, 
+                          m_torrentFile);
 
       peer->handshakeAndRun();
 
@@ -352,6 +355,11 @@ Client::prepareFile()
     m_piecesDone.push_back(false);
   }
 
+  m_piecesLocked = std::vector<bool>();
+  for (int i=0; i<pieceCount; i++) {
+    m_piecesDone.push_back(false);
+  }
+
   // open the file for reading 
   m_torrentFile = (FILE*)malloc(sizeof(FILE));
   m_torrentFile = fopen (torrentFileName.c_str(), "r");
@@ -375,10 +383,12 @@ Client::prepareFile()
 
         if (equal(util::sha1(pieceBuf), m_metaInfo.getHashOfPiece(i))) {
           m_piecesDone.at(i) = true;
+          m_piecesLocked.at(i) = true;
           // std::cout << "piece " << i << " good" << std::endl;
         }
         else {
           m_piecesDone.at(i) = false;
+          m_piecesLocked.at(i) = false;
           // std::cout << "piece " << i << " bad" << std::endl;
         }
       }

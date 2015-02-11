@@ -10,6 +10,7 @@
 #include "peer.hpp"
 #include "msg/handshake.hpp"
 #include "util/buffer-stream.hpp"
+#include "util/hash.hpp"
 
 namespace sbt {
 
@@ -19,6 +20,10 @@ namespace sbt {
   : m_peerId(peerId)
   , m_ip(ip)
   , m_port(port)
+  , interested(false) 
+  , requested(false) 
+  , unchoked(false) 
+  , unchoking(false) 
 {
 }
 
@@ -26,11 +31,17 @@ namespace sbt {
         const std::string& ip,
         uint16_t port,
         std::vector<bool>* clientPiecesDone,
+        std::vector<bool>* clientPiecesLocked,
         FILE *clientFile)
   : m_peerId(peerId)
   , m_ip(ip)
   , m_port(port)
+  , interested(false) 
+  , requested(false) 
+  , unchoked(false) 
+  , unchoking(false) 
   , m_clientPiecesDone(clientPiecesDone)
+  , m_clientPiecesLocked(clientPiecesLocked)
   , m_clientFile(clientFile)
 {
 }
@@ -76,7 +87,63 @@ Peer::handshakeAndRun()
     log("bitfield exchange successfull");
   }
 
-  return;
+  // hand off to the main running function
+  run();
+}
+
+void
+Peer::run()
+{
+  // TODO: when should we close with this peer?
+  while (true) 
+  {
+    // if we are not waiting on unchoke or piece already 
+    if (!interested && !requested)
+    {
+      // if they have a piece we want
+      int pieceIndex = getFirstAvailablePiece();
+      if (pieceIndex >= 0) {
+        // if we are choked, send a interested msg
+        if (!unchoked) {
+          msg::Interested interest;
+          ConstBufferPtr cbf = interest.encode();
+          send(m_sock, cbf->buf(), cbf->size(), 0);
+
+          interested = true;
+          log("Sent interested message"); 
+        }
+        // if not choked, send the request
+        else {
+          msg::Request req(pieceIndex, 0, m_metaInfo->getPieceLength()); 
+          ConstBufferPtr cbf = req.encode();
+          send(m_sock, cbf->buf(), cbf->size(), 0);
+
+          requested = true;
+          log("Send request message");
+        }
+      }
+    }
+
+    waitOnMessage();
+
+  }
+}
+
+// Finds the first available piece to download. If none
+// are found, returns -1
+// Locks the available piece
+// TODO: warning critical section
+int
+Peer::getFirstAvailablePiece()
+{
+  for (int i=0; i<m_metaInfo->getNumPieces(); i++) 
+  {
+    if (!m_clientPiecesDone->at(i) && m_piecesDone.at(i)) {
+      return i;
+    }
+  }
+
+  return -1;
 }
 
 int
@@ -261,33 +328,45 @@ Peer::log(std::string msg)
 
 void Peer::handleUnchoke(ConstBufferPtr cbf)
 {
+  log("recieved unchoke");
+
+  unchoked = true;
+  interested = false;
   return;
 }
 
 void Peer::handleInterested(ConstBufferPtr cbf)
 {
+  //TODO:
   return;
 }
 
 void Peer::handleHave(ConstBufferPtr cbf)
 {
+  log("recieved have");
+
+  msg::Have have;
+  have.decode(cbf);
+
+  // set the piece 
+  m_piecesDone[have.getIndex()] = true;
   return;
 }
 
 
 void Peer::handleBitfield(ConstBufferPtr cbf)
 {
-  log("recieved bitfield");
-
-  msg::Bitfield bf;
-  bf.decode(cbf);
-
-  ConstBufferPtr bitfield = bf.getBitfield();
+  log("Recieved bitfield out of order");
+  //pthread_exit(NULL);
   return;
 }
 
 void Peer::handleRequest(ConstBufferPtr cbf)
 {
+  // TODO:
+  if (unchoking) {
+
+  }
   return;
 }
 
@@ -298,6 +377,16 @@ void Peer::handlePiece(ConstBufferPtr cbf)
   msg::Piece piece;
   piece.decode(cbf);
 
+  ConstBufferPtr pieceSha1 = util::sha1(piece.getBlock());
+  
+  if (!equal(pieceSha1, m_metaInfo->getHashOfPiece(piece.getIndex()))) {
+    std::cout << "difference in hash" << std::endl ;
+  } else {
+    std::cout << "same hash!" << std::endl;
+  }
+
+  //TODO: send have
+  //
   return;
 }
 

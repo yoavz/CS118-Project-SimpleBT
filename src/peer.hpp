@@ -21,10 +21,14 @@ public:
         const std::string& ip,
         uint16_t port,
         std::vector<bool>* clientPiecesDone,
+        std::vector<bool>* clientPiecesLocked,
         FILE *clientFile);
 
   void
   handshakeAndRun();
+
+  void
+  run();
 
   void
   setBitfield(ConstBufferPtr bitfield, int size);
@@ -93,11 +97,13 @@ public:
 
   void 
   setClientData(std::vector<bool>* clientPiecesDone,
+                std::vector<bool>* clientPiecesLocked,
                 MetaInfo *metaInfo,
                 FILE *clientFile)
   {
     m_metaInfo = metaInfo;
     m_clientPiecesDone = clientPiecesDone;
+    m_clientPiecesLocked = clientPiecesLocked;
     m_clientFile = clientFile;
   }
 
@@ -109,16 +115,41 @@ private:
   int m_sock;
   int m_activePiece;
 
+  // we have sent an interested msg, not yet recieved
+  // an unchoke msg
+  bool interested;
+
+  // we have sent a request msg, have not yet
+  // recieved the corresponding piece
+  bool requested;
+
+  // we can recieve pieces from this peer
+  bool unchoked;
+
+  // we can send pieces to this peer, because
+  // we have already sent them "unchoke"
+  bool unchoking;
+
+  // the pieces that this peer has done
   std::vector<bool> m_piecesDone;
   ConstBufferPtr m_bitfield;
 
   // client references
   MetaInfo *m_metaInfo;
+
+  // client pieces that are DONE
   std::vector<bool>* m_clientPiecesDone;
+
+  // client pieces that are LOCKED
+  // where LOCKED is either DONE or DOWNLOADING
+  std::vector<bool>* m_clientPiecesLocked;
+
   FILE *m_clientFile;
 
 private:
   int connectSocket();
+
+  int getFirstAvailablePiece();
 
   void log(std::string msg);
 
@@ -133,8 +164,6 @@ private:
   int waitOnBitfield(int size);
   int waitOnMessage();
   int waitOnHandshake();
-
-
 };
 
 } // namespace sbt
