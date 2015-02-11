@@ -8,8 +8,8 @@
 #include <stdio.h>
 
 #include "peer.hpp"
-#include "msg/msg-base.hpp"
 #include "msg/handshake.hpp"
+#include "util/buffer-stream.hpp"
 
 namespace sbt {
 
@@ -59,11 +59,22 @@ Peer::handshakeAndRun()
   if (waitOnHandshake()) {
     // pthread_exit(NULL);
     return;
+  } else {
+    log("handshake exchange successfull");
   }
 
-  log("handshake exchange successfull");
+  // construct and send our bitfield 
+  msg::Bitfield bf = constructBitfield();
+  ConstBufferPtr bfMsg = bf.encode(); 
+  send(m_sock, bfMsg->buf(), bfMsg->size(), 0);
 
-  // send our handshake
+  // wait on the bitfield (this fctn also parses the bitfield)
+  if (waitOnBitfield(bfMsg->size())) {
+    // pthread_exit(NULL);
+    return;
+  } else {
+    log("bitfield exchange successfull");
+  }
 
   return;
 }
@@ -104,7 +115,6 @@ Peer::connectSocket()
 
 // Waits on a handshake, returns 0 if recieved a successful handshake
 // returns -1 if the handshake has the wrong hash or error
-
 int
 Peer::waitOnHandshake()
 {
@@ -133,6 +143,33 @@ Peer::waitOnHandshake()
     // pthread_exit(NULL);
     return -1;
   }
+
+  return 0;
+}
+
+// Input: size- the size of the Bitfield msg we are expecting,
+// INLCLUDING length/id of the msg 
+// Waits on a bitfield, returns 0 if recieved a successful 
+// returns -1 if the bitfield is the wrong length or error
+// This function also calls setBitfield, which parses the
+// bitfield in m_piecesDone
+int
+Peer::waitOnBitfield(int size)
+{
+  int status;
+
+  char *bfBuf = (char *) malloc (size);
+  if ((status = recv(m_sock, bfBuf, size, 0)) == -1) {
+    perror("recv");
+    return -1;
+  }
+
+  ConstBufferPtr cbf = std::make_shared<Buffer> (bfBuf, size);
+  msg::Bitfield bf;
+  bf.decode(cbf);
+
+  // parse/set the bitfield
+  setBitfield(bf.getBitfield(), m_metaInfo->getNumPieces());
 
   return 0;
 }
@@ -191,15 +228,15 @@ Peer::waitOnMessage()
       break;
   }
 
-  // msg::Bitfield bf;
-  // bf.decode(bf_buf);
-  //
-  // if (bf.getId() == msg::MSG_ID_BITFIELD)
-  //   std::cout << "good" << std::endl; 
-
   return 0;
 }
 
+// input: a bitfield in cbf form, 
+//        size: the number of BITS in the bf
+//        NOTE that this is not the amount of bytes
+//        in the bitfield nor the amount of bytes
+//        of the bitfield message
+// parses a bitfield into m_piecesDone
 void
 Peer::setBitfield(ConstBufferPtr bf, int size)
 {
@@ -262,6 +299,40 @@ void Peer::handlePiece(ConstBufferPtr cbf)
   piece.decode(cbf);
 
   return;
+}
+
+// constructs a bitfield based on the client's current files
+// TODO: WARNING critical section
+
+msg::Bitfield
+Peer::constructBitfield()
+{
+
+  // construct a bitfield
+  int64_t fileLength = m_metaInfo->getLength();
+  int64_t pieceLength = m_metaInfo->getPieceLength();
+  int numPieces = fileLength / pieceLength + (fileLength % pieceLength == 0 ? 0 : 1);
+  int numBytes = numPieces/8 + (numPieces%8 == 0 ? 0 : 1);
+
+  char *bitfield = (char *) malloc(numBytes);
+  memset(bitfield, 0, numBytes);
+
+  int byteNum, bitNum;
+  for (int count=0; count < numPieces; count++)
+  {
+    byteNum = count / 8;    
+    bitNum = count % 8;
+
+    if (m_clientPiecesDone->at(count)) {
+      *(bitfield+byteNum) |= 1 << (7-bitNum);
+    } 
+  }
+
+  OBufferStream bfstream;
+  bfstream.write(bitfield, numBytes);
+  msg::Bitfield bf_struct(bfstream.buf());
+
+  return bf_struct;
 }
 
 } // namespace sbt

@@ -6,6 +6,7 @@
 #include "common.hpp"
 #include "meta-info.hpp"
 #include "tracker-response.hpp"
+#include "msg/msg-base.hpp"
 
 namespace sbt {
 
@@ -100,12 +101,6 @@ public:
     m_clientFile = clientFile;
   }
 
-  int
-  waitOnMessage();
-
-  int
-  waitOnHandshake();
-
 private:
   std::string m_peerId;    
   std::string m_ip;
@@ -133,6 +128,12 @@ private:
   void handleBitfield(ConstBufferPtr cbf);
   void handleRequest(ConstBufferPtr cbf);
   void handlePiece(ConstBufferPtr cbf);
+
+  msg::Bitfield constructBitfield();
+  int waitOnBitfield(int size);
+  int waitOnMessage();
+  int waitOnHandshake();
+
 
 };
 
