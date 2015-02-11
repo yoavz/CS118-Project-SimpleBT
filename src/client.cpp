@@ -58,13 +58,9 @@ Client::Client(const std::string& port, const std::string& torrent)
   m_clientPort = boost::lexical_cast<uint16_t>(port);
 
   loadMetaInfo(torrent);
-
-  // std::cout << "loaded metainfo" << std::endl;
-
+  std::cout << "loaded metainfo" << std::endl;
   prepareFile();
-
-  // std::cout << "prepared file!" << std::endl;
-
+  std::cout << "prepared file!" << std::endl;
   run();
 }
 
@@ -98,18 +94,6 @@ Client::run()
 
       peer->handshakeAndRun();
 
-      // OLD SHIT
-
-      //
-      // std::cout << "Connecting to " << peerPort << std::endl; 
-      //
-      // int peerSock = socket(AF_INET, SOCK_STREAM, 0);
-      //
-      // peer->setSock(peerSock);
-      // connectPeer(peer);
-      // std::cout << "Connected to " << peerPort << std::endl; 
-      //
-      // peerProcedure(peer);
   }
 
 }
