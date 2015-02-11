@@ -36,11 +36,11 @@ public:
     m_sock = sock;
   }
 
-  bool
-  getChoked()
-  {
-    return m_choked;
-  }
+  // bool
+  // getChoked()
+  // {
+  //   return m_choked;
+  // }
 
   const std::string&
   getPeerId()
@@ -88,19 +88,30 @@ public:
   waitOnMessage();
 
 private:
-  int m_sock;
-  int m_activePiece;
-  bool m_choked;
-  bool m_interested;
+  // Client* m_parent;
 
   std::string m_peerId;    
   std::string m_ip;
   uint16_t m_port;
 
+  int m_sock;
+  int m_activePiece;
+
+  // bool m_choked;
+  // bool m_interested;
+
   std::vector<bool> m_piecesDone;
   ConstBufferPtr m_bitfield;
 
 private:
+  void log(std::string msg);
+
+  void handleUnchoke(ConstBufferPtr cbf);
+  void handleInterested(ConstBufferPtr cbf);
+  void handleHave(ConstBufferPtr cbf);
+  void handleBitfield(ConstBufferPtr cbf);
+  void handleRequest(ConstBufferPtr cbf);
+  void handlePiece(ConstBufferPtr cbf);
 
 };
 

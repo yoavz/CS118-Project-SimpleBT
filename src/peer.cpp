@@ -14,13 +14,10 @@ namespace sbt {
 Peer::Peer (const std::string& peerId,
             const std::string& ip,
             uint16_t port)
-  : m_ip(ip)
+  : m_peerId(peerId)
+  , m_ip(ip)
   , m_port(port)
-  , m_peerId(peerId)
-  , m_choked(false)
-  , m_interested(false)
 {
-
 }
 
 void
@@ -56,12 +53,38 @@ Peer::waitOnMessage()
     return -1;
   }
 
-  ConstBufferPtr bf_buf = std::make_shared<Buffer> (msgBuf, msgLength);
-  msg::Bitfield bf;
-  bf.decode(bf_buf);
+  // generate a ConstBufferPtr
+  ConstBufferPtr cbf = std::make_shared<Buffer> (msgBuf, msgLength);
 
-  if (bf.getId() == msg::MSG_ID_BITFIELD)
-    std::cout << "good" << std::endl; 
+  switch (id) {
+    case msg::MSG_ID_UNCHOKE:
+      handleUnchoke(cbf);
+      break;
+    case msg::MSG_ID_INTERESTED:
+      handleInterested(cbf);
+      break;
+    case msg::MSG_ID_HAVE:
+      handleHave(cbf);
+      break;
+    case msg::MSG_ID_BITFIELD:
+      handleBitfield(cbf);
+      break;
+    case msg::MSG_ID_REQUEST:
+      handleRequest(cbf);
+      break;
+    case msg::MSG_ID_PIECE:
+      handlePiece(cbf);
+      break;
+    default:
+      log("Recieved unknown message, not doing anything");
+      break;
+  }
+
+  // msg::Bitfield bf;
+  // bf.decode(bf_buf);
+  //
+  // if (bf.getId() == msg::MSG_ID_BITFIELD)
+  //   std::cout << "good" << std::endl; 
 
   return 0;
 }
@@ -80,6 +103,44 @@ Peer::setBitfield(ConstBufferPtr bf, int size)
       m_piecesDone.at(count) = false;
     }
   }
+}
+
+void 
+Peer::log(std::string msg)
+{
+  std::cout << "(PEER " << m_peerId << "): " << msg << std::endl;
+  return;
+}
+
+void Peer::handleUnchoke(ConstBufferPtr cbf)
+{
+  return;
+}
+
+void Peer::handleInterested(ConstBufferPtr cbf)
+{
+  return;
+}
+
+void Peer::handleHave(ConstBufferPtr cbf)
+{
+  return;
+}
+
+
+void Peer::handleBitfield(ConstBufferPtr cbf)
+{
+  return;
+}
+
+void Peer::handleRequest(ConstBufferPtr cbf)
+{
+  return;
+}
+
+void Peer::handlePiece(ConstBufferPtr cbf)
+{
+  return;
 }
 
 } // namespace sbt
