@@ -83,8 +83,10 @@ Client::run()
 
       Peer *peer = &it->second;
       std::string peerPort = std::to_string(peer->getPort());
-      if (peerPort == std::to_string(m_clientPort))
+      if (peerPort == std::to_string(m_clientPort)) 
         continue;
+
+      std::cout << "running peer " << peer->getPeerId() << std::endl;
 
       // set client data
       peer->setClientData(&m_piecesDone, 
