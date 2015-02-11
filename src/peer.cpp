@@ -247,29 +247,12 @@ Peer::waitOnBitfield(int size)
   // next byte is the ID 
   uint8_t id = *(bfBuf+4);
 
-  std::cout << "length: " << length << std::endl;
-  std::cout << "is bitfield: " << (id == msg::MSG_ID_BITFIELD) << std::endl;
+  // std::cout << "length: " << length << std::endl;
+  // std::cout << "is bitfield: " << (id == msg::MSG_ID_BITFIELD) << std::endl;
 
   // next bytes are the bitfield
   char *bitfield = bfBuf+5;
 
-
-  // with a (full!) bitfield length of 23
-  // bitfield = 1111 1111 1111 1111 1111 111|X XXXX XXXX
-  // where X's are bits we don't care about
-  // uint32_t a = *(reinterpret_cast<uint32_t *> (bitfield));
-
-  // a >> 9 = 0000 0000 0|111 1111 1111 1111 1111 1111
-  // uint32_t b = a >> 9;
-  // char *shifted = reinterpret_cast<char *> (&b);
-
-  // std::cout << "bitfield as int: " << b << std::endl;
-
-  // ConstBufferPtr cbf = std::make_shared<Buffer> (bfBuf, size);
-  // msg::Bitfield bf;
-  // bf.decode(cbf);
-
-  // parse/set the bitfield
   setBitfield(bitfield, m_metaInfo->getNumPieces());
 
   return 0;
@@ -329,7 +312,19 @@ Peer::waitOnMessage()
       handlePiece(cbf);
       break;
     case msg::MSG_ID_KEEP_ALIVE:
-      log("Recieved keep alive message");
+      log("Unsupported: keep alive message");
+      break;
+    case msg::MSG_ID_CHOKE:
+      log("Unsupported: choke message");
+      break;
+    case msg::MSG_ID_NOT_INTERESTED:
+      log("Unsupported: not interested message");
+      break;
+    case msg::MSG_ID_CANCEL:
+      log("Unsupported: cancel message");
+      break;
+    case msg::MSG_ID_PORT:
+      log("Unsupported: port message");
       break;
     default:
       log("Recieved unknown message, not doing anything");
@@ -363,16 +358,14 @@ Peer::setBitfield(char *bitfield, int size)
 
   // a >> 9 = 0000 0000 0|111 1111 1111 1111 1111 1111
   uint32_t b = a >> (32-size);
+  std::cout << "bitfield: ";
   for (int i=0; i<32; i++)
     std::cout << ((b >> (31-i)) & 1);
-
-  char *shifted = reinterpret_cast<char *> (&b);
-
+  std::cout << std::endl;
   std::cout << "bitfield (as uint32_t): " << b << std::endl;
 
   for (int count=0; count < size; count++) {
     uint32_t to_check = size-count-1;
-    std::cout << ((b >> to_check) & 1);
     if ((b >> to_check) & 1) {
       m_piecesDone[count] = true;
       // std::cout << "found bit: " << to_check << std::endl;
@@ -382,8 +375,6 @@ Peer::setBitfield(char *bitfield, int size)
       // std::cout << "piece " << count << " needed"<<std::endl;
     }
   }
-  std::cout << std::endl;
-
   return;
 }
 
