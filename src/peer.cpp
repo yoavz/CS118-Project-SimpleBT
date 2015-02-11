@@ -372,7 +372,8 @@ Peer::setBitfield(char *bitfield, int size)
       // std::cout << "found bit: " << to_check << std::endl;
       // std::cout << "found bit (as num) : " << (1 << to_check) << std::endl;
     } else {
-      m_piecesDone[count] = false;
+      //TODO: change?
+      m_piecesDone[count] = true;
       // std::cout << "piece " << count << " needed"<<std::endl;
     }
   }
