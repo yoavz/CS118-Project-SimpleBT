@@ -149,6 +149,8 @@ Peer::getFirstAvailablePiece()
 {
   for (int i=0; i<m_metaInfo->getNumPieces(); i++) 
   {
+    std::cout << "client piece done?: " << m_clientPiecesDone->at(i) << std::endl;
+    std::cout << "peer piece done?: " << m_piecesDone.at(i) << std::endl;
     if (!m_clientPiecesDone->at(i) && m_piecesDone.at(i)) {
       return i;
     }
@@ -330,15 +332,15 @@ Peer::setBitfield(ConstBufferPtr bf, int size)
 
   for (int count=0; count < size; count++) {
     if (*bitfield & (1 << (size-count))) {
-      m_piecesDone.at(count) = true;
-      std::cout << "piece " << count << " done"<<std::endl;
+      m_piecesDone[count] = true;
+      // std::cout << "piece " << count << " done"<<std::endl;
     } else {
-      m_piecesDone.at(count) = false;
-      std::cout << "piece " << count << " needed"<<std::endl;
+      m_piecesDone[count] = false;
+      // std::cout << "piece " << count << " needed"<<std::endl;
     }
   }
 
-  std::cout << "size of bitfield: " << m_piecesDone.size() << std::endl;
+  // std::cout << "size of bitfield: " << m_piecesDone.size() << std::endl;
 }
 
 void 
