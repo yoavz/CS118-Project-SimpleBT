@@ -339,14 +339,16 @@ Peer::setBitfield(ConstBufferPtr bf, int size)
 
   uint32_t a = *(reinterpret_cast<uint32_t *> (bitfield));
   std::cout << "bitfield as int: " << a << std::endl;
+  std::cout << "size of bitfield: " << size << std::endl;
 
   for (int count=0; count < size; count++) {
+    std::cout << "checking bit: " << size-count << std::endl;
     if (*bitfield & (1 << (size-count))) {
       m_piecesDone[count] = true;
-      // std::cout << "piece " << count << " done"<<std::endl;
+      std::cout << "piece " << count << " done"<<std::endl;
     } else {
       m_piecesDone[count] = false;
-      // std::cout << "piece " << count << " needed"<<std::endl;
+      std::cout << "piece " << count << " needed"<<std::endl;
     }
   }
 
