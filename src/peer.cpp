@@ -315,7 +315,7 @@ Peer::waitOnMessage()
       log("Unsupported: keep alive message");
       break;
     case msg::MSG_ID_CHOKE:
-      log("Unsupported: choke message");
+      // log("Unsupported: choke message");
       break;
     case msg::MSG_ID_NOT_INTERESTED:
       log("Unsupported: not interested message");
@@ -410,6 +410,7 @@ void Peer::handleHave(ConstBufferPtr cbf)
 
   // set the piece 
   m_piecesDone[have.getIndex()] = true;
+
   return;
 }
 
