@@ -242,14 +242,17 @@ Peer::waitOnBitfield(int size)
     return -1;
   }
 
-  // uint32_t length = ntohl(*reinterpret_cast<uint32_t *> (bfBuf));
+  uint32_t length = ntohl(*reinterpret_cast<uint32_t *> (bfBuf));
 
-  // std::cout << length << std::endl;
+  std::cout << length << std::endl;
   // next byte is the ID 
-  // uint8_t id = *(bfBuf+4);
-  //
-  // std::cout << "length: " << length << std::endl;
-  // std::cout << "is bitfield: " << (id == msg::MSG_ID_BITFIELD) << std::endl;
+  uint8_t id = *(bfBuf+4);
+
+  std::cout << "length: " << length << std::endl;
+  std::cout << "is bitfield: " << (id == msg::MSG_ID_BITFIELD) << std::endl;
+
+  uint32_t a = *(reinterpret_cast<uint32_t *> (bfBuf+5)) >> 9;
+  std::cout << "bitfield as int: " << a << std::endl;
 
   ConstBufferPtr cbf = std::make_shared<Buffer> (bfBuf, size);
   msg::Bitfield bf;
@@ -337,9 +340,6 @@ Peer::setBitfield(ConstBufferPtr bf, int size)
   m_piecesDone = std::vector<bool> (size);
   char *bitfield = (char *)bf->buf();
 
-  uint32_t a = *(reinterpret_cast<uint32_t *> (bitfield));
-  std::cout << "bitfield as int: " << a << std::endl;
-  std::cout << "size of bitfield: " << size << std::endl;
 
   for (int count=0; count < size; count++) {
     // std::cout << "checking bit: " << size-count-1 << std::endl;
