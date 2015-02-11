@@ -306,6 +306,9 @@ Peer::waitOnMessage()
     case msg::MSG_ID_PIECE:
       handlePiece(cbf);
       break;
+    case msg::MSG_ID_KEEP_ALIVE:
+      log("Recieved keep alive message");
+      break;
     default:
       log("Recieved unknown message, not doing anything");
       break;
