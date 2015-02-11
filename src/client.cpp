@@ -75,26 +75,25 @@ Client::run()
   // std::cout << "recieved and parsed tracker resp" << std::endl;
 
   // attempt connecting to all peers
-  for(std::map<std::string, Peer>::iterator it = m_peers.begin(); it != m_peers.end(); it++) {
+  for (auto& peer : m_peers) {
 
       // iterator->first = key
       // iterator->second = value
       // Repeat if you also want to iterate through the second map.
 
-      Peer *peer = &it->second;
-      std::string peerPort = std::to_string(peer->getPort());
+      std::string peerPort = std::to_string(peer.getPort());
       if (peerPort == std::to_string(m_clientPort)) 
         continue;
 
-      std::cout << "running peer " << peer->getPeerId() << std::endl;
+      std::cout << "running peer " << peer.getPeerId() << std::endl;
 
       // set client data
-      peer->setClientData(&m_piecesDone, 
+      peer.setClientData(&m_piecesDone, 
                           &m_piecesLocked, 
                           &m_metaInfo, 
                           m_torrentFile);
 
-      peer->handshakeAndRun();
+      peer.handshakeAndRun();
 
   }
 
@@ -283,7 +282,7 @@ Client::recvTrackerResponse()
     for (const auto& peer : infos) {
       std::cout << peer.ip << ":" << peer.port << std::endl;
       Peer p(peer.peerId, peer.ip, peer.port);
-      m_peers.insert( std::pair<std::string, Peer> (peer.peerId, p) );
+      m_peers.push_back(p);
     }
   }
 

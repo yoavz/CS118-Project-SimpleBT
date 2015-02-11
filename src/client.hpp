@@ -117,7 +117,7 @@ private:
   std::vector<bool> m_piecesLocked;
   
   // list of peers (from tracker)
-  std::map<std::string, Peer> m_peers;
+  std::vector<Peer> m_peers;
 };
 
 } // namespace sbt
