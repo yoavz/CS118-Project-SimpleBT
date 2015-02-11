@@ -332,7 +332,7 @@ Peer::setBitfield(ConstBufferPtr bf, int size)
 void 
 Peer::log(std::string msg)
 {
-  // std::cout << "(" << m_peerId << "): " << msg << std::endl;
+  std::cout << "(" << m_peerId << "): " << msg << std::endl;
   return;
 }
 
@@ -393,6 +393,8 @@ void Peer::handlePiece(ConstBufferPtr cbf)
     log("difference in hash");
   } else {
     log("same hash");
+    sendHave(m_sock, piece.getIndex());
+    log("sent have");
   }
 
   requested = false;
@@ -403,7 +405,19 @@ void Peer::handlePiece(ConstBufferPtr cbf)
   (*m_clientPiecesDone)[piece.getIndex()] = true;
 
   //TODO: send have 
+
   return;
+}
+
+// input: a socket to send to and a piece index
+// sends a "have" message 
+void
+Peer::sendHave(int sock, int pieceIndex)
+{
+  msg::Have have(pieceIndex);
+  ConstBufferPtr cbf = have.encode();
+  send(sock, cbf->buf(), cbf->size(), 0);
+  return; 
 }
 
 // constructs a bitfield based on the client's current files

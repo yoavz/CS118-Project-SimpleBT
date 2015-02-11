@@ -152,6 +152,7 @@ private:
   int getFirstAvailablePiece();
 
   void log(std::string msg);
+  void sendHave(int sock, int pieceIndex);
 
   void handleUnchoke(ConstBufferPtr cbf);
   void handleInterested(ConstBufferPtr cbf);
