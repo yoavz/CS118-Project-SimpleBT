@@ -149,8 +149,6 @@ Peer::getFirstAvailablePiece()
 {
   for (int i=0; i<m_metaInfo->getNumPieces(); i++) 
   {
-    std::cout << "client piece done?: " << m_clientPiecesDone->at(i) << std::endl;
-    std::cout << "peer piece done?: " << m_piecesDone.at(i) << std::endl;
     if (!m_clientPiecesDone->at(i) && m_piecesDone.at(i)) {
       return i;
     }
