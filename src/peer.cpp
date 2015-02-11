@@ -242,6 +242,15 @@ Peer::waitOnBitfield(int size)
     return -1;
   }
 
+  uint32_t length = ntohl(*reinterpret_cast<uint32_t *> (bfBuf));
+
+  // std::cout << length << std::endl;
+  // next byte is the ID 
+  uint8_t id = *(bfBuf+4);
+
+  std::cout << "length: " << length << std::endl;
+  std::cout << "is bitfield: " << (id == msg::MSG_ID_BITFIELD) << std::endl;
+
   ConstBufferPtr cbf = std::make_shared<Buffer> (bfBuf, size);
   msg::Bitfield bf;
   bf.decode(cbf);
