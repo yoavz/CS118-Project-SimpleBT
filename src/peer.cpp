@@ -263,14 +263,16 @@ Peer::waitOnMessage()
 
   std::cout << "Parsed message length: " << length << std::endl;
 
-  // reallocate the msgBuf to the proper length
-  msgBuf = (char *)realloc(msgBuf, msgLength);
-  if ((status = recv(m_sock, msgBuf+5, msgLength-5, 0)) == -1) {
-    perror("recv");
-    return -1;
+  // if there is a body to recieve, wait for it
+  if (length > 1) {
+    // reallocate the msgBuf to the proper length
+    msgBuf = (char *)realloc(msgBuf, msgLength);
+    if ((status = recv(m_sock, msgBuf+5, msgLength-5, 0)) == -1) {
+      perror("recv");
+      return -1;
+    }
   }
 
-  // generate a ConstBufferPtr
   ConstBufferPtr cbf = std::make_shared<Buffer> (msgBuf, msgLength);
 
   switch (id) {
