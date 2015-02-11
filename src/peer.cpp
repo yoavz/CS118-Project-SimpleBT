@@ -35,22 +35,33 @@ Peer::waitOnMessage()
   int status;
 
   // first, we wait on a length and ID, which will always be 5 bytes
-  char *lengthAndID = (char *) malloc (sizeof(char) * 5);
-  if ((status = recv(m_sock, lengthAndID, 5, 0)) == -1) {
+  char *msgBuf = (char *) malloc (5);
+  if ((status = recv(m_sock, msgBuf, 5, 0)) == -1) {
     perror("recv");
     return -1;
   }
 
   // first 4 bytes are the length
-  uint32_t length = ntohl(*reinterpret_cast<uint32_t *> (lengthAndID));
+  uint32_t length = ntohl(*reinterpret_cast<uint32_t *> (msgBuf));
+  uint32_t msgLength = length+4;
 
-  std::cout << length << std::endl;
-
+  // std::cout << length << std::endl;
   // next byte is the ID 
-  uint8_t id = *(lengthAndID+4);
+  uint8_t id = *(msgBuf+4);
 
-  if (id == msg::MSG_ID_BITFIELD) 
-    std::cout << "bitfield" << std::endl;
+  // reallocate the msgBuf to the proper length
+  msgBuf = (char *)realloc(msgBuf, msgLength);
+  if ((status = recv(m_sock, msgBuf+5, msgLength-5, 0)) == -1) {
+    perror("recv");
+    return -1;
+  }
+
+  ConstBufferPtr bf_buf = std::make_shared<Buffer> (msgBuf, msgLength);
+  msg::Bitfield bf;
+  bf.decode(bf_buf);
+
+  if (bf.getId() == msg::MSG_ID_BITFIELD)
+    std::cout << "good" << std::endl; 
 
   return 0;
 }
