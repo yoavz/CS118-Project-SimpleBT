@@ -328,6 +328,8 @@ Peer::setBitfield(ConstBufferPtr bf, int size)
   m_piecesDone = std::vector<bool> (size);
   const char *bitfield = (const char *)bf->buf();
 
+  std::cout << bf->size() << std::endl;
+
   if (*bitfield & (1 << 0)) {
     std::cout << "pos 0 set" << std::endl;
   }
