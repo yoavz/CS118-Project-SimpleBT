@@ -242,33 +242,35 @@ Peer::waitOnBitfield(int size)
     return -1;
   }
 
+  // length is first four bytes
   uint32_t length = ntohl(*reinterpret_cast<uint32_t *> (bfBuf));
-
-  std::cout << length << std::endl;
   // next byte is the ID 
   uint8_t id = *(bfBuf+4);
 
   std::cout << "length: " << length << std::endl;
   std::cout << "is bitfield: " << (id == msg::MSG_ID_BITFIELD) << std::endl;
 
+  // next bytes are the bitfield
+  char *bitfield = bfBuf+5;
+
+
   // with a (full!) bitfield length of 23
   // bitfield = 1111 1111 1111 1111 1111 111|X XXXX XXXX
   // where X's are bits we don't care about
-  char *bitfield = bfBuf+5;
-  uint32_t a = *(reinterpret_cast<uint32_t *> (bitfield));
+  // uint32_t a = *(reinterpret_cast<uint32_t *> (bitfield));
 
   // a >> 9 = 0000 0000 0|111 1111 1111 1111 1111 1111
-  uint32_t b = a >> 9;
-  char *shifted = reinterpret_cast<char *> (&b);
+  // uint32_t b = a >> 9;
+  // char *shifted = reinterpret_cast<char *> (&b);
 
-  std::cout << "bitfield as int: " << b << std::endl;
+  // std::cout << "bitfield as int: " << b << std::endl;
 
-  ConstBufferPtr cbf = std::make_shared<Buffer> (bfBuf, size);
-  msg::Bitfield bf;
-  bf.decode(cbf);
+  // ConstBufferPtr cbf = std::make_shared<Buffer> (bfBuf, size);
+  // msg::Bitfield bf;
+  // bf.decode(cbf);
 
   // parse/set the bitfield
-  setBitfield(bf.getBitfield(), m_metaInfo->getNumPieces());
+  setBitfield(bitfield, m_metaInfo->getNumPieces());
 
   return 0;
 }
@@ -337,22 +339,35 @@ Peer::waitOnMessage()
   return 0;
 }
 
-// input: a bitfield in cbf form, 
+// input: a bitfield (highest bit is first piece), 
 //        size: the number of BITS in the bf
 //        NOTE that this is not the amount of bytes
 //        in the bitfield nor the amount of bytes
 //        of the bitfield message
 // parses a bitfield into m_piecesDone
 void
-Peer::setBitfield(ConstBufferPtr bf, int size)
+Peer::setBitfield(char *bitfield, int size)
 {
-  m_piecesDone = std::vector<bool> (size);
-  char *bitfield = (char *)bf->buf();
+  if (size > 32) {
+    log("ERROR: can't yet handle bitfields of size > 32");
+    m_piecesDone = std::vector<bool> (size);
+    return;
+  }
 
+  m_piecesDone = std::vector<bool> (size);
+
+  // with a (full!) bitfield length of 23
+  // bitfield = 1111 1111 1111 1111 1111 111|X XXXX XXXX
+  // where X's are bits we don't care about
+  uint32_t a = *(reinterpret_cast<uint32_t *> (bitfield));
+
+  // a >> 9 = 0000 0000 0|111 1111 1111 1111 1111 1111
+  uint32_t b = a >> (32-size);
+  char *shifted = reinterpret_cast<char *> (&b);
 
   for (int count=0; count < size; count++) {
-    // std::cout << "checking bit: " << size-count-1 << std::endl;
-    if (*bitfield & (1 << (size-count-1))) {
+    std::cout << "checking bit: " << size-count-1 << std::endl;
+    if (*shifted & (1 << (size-count-1))) {
       m_piecesDone[count] = true;
       std::cout << "piece " << count << " done"<<std::endl;
     } else {
@@ -361,7 +376,7 @@ Peer::setBitfield(ConstBufferPtr bf, int size)
     }
   }
 
-  // std::cout << "size of bitfield: " << m_piecesDone.size() << std::endl;
+  return;
 }
 
 void 

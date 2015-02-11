@@ -31,7 +31,7 @@ public:
   run();
 
   void
-  setBitfield(ConstBufferPtr bitfield, int size);
+  setBitfield(char *bitfield, int size);
 
 public:
 
