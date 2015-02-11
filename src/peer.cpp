@@ -365,13 +365,14 @@ Peer::setBitfield(char *bitfield, int size)
   uint32_t b = a >> (32-size);
   char *shifted = reinterpret_cast<char *> (&b);
 
+  std::cout << "bitfield (as uint32_t): " << b << std::endl;
+
   for (int count=0; count < size; count++) {
     uint32_t to_check = size-count-1;
-    std::cout << "checking bit: " << to_check << std::endl;
-    std::cout << "checking bit (as num) : " << (1 << to_check) << std::endl;
     if (*shifted & (1 << to_check)) {
       m_piecesDone[count] = true;
-      std::cout << "piece " << count << " done"<<std::endl;
+      std::cout << "found bit: " << to_check << std::endl;
+      std::cout << "found bit (as num) : " << (1 << to_check) << std::endl;
     } else {
       m_piecesDone[count] = false;
       // std::cout << "piece " << count << " needed"<<std::endl;
