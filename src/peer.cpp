@@ -128,7 +128,7 @@ Peer::run()
           send(m_sock, cbf->buf(), cbf->size(), 0);
 
           requested = true;
-          log("Send request message");
+          log("Send request message for piece: " + std::to_string(pieceIndex) + " with length: " + std::to_string(pieceLength));
         }
       } else {
         log("did not find a piece");
