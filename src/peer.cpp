@@ -114,7 +114,15 @@ Peer::run()
         }
         // if not choked, send the request
         else {
-          msg::Request req(pieceIndex, 0, m_metaInfo->getPieceLength()); 
+          int pieceLength = m_metaInfo->getPieceLength(); 
+          // if it's the final piece, it's a diff length
+          if (pieceIndex == m_metaInfo->getNumPieces()-1) {
+            pieceLength = m_metaInfo->getLength() % m_metaInfo->getPieceLength();
+            if (pieceLength == 0)
+              pieceLength = m_metaInfo->getPieceLength();
+          }
+
+          msg::Request req(pieceIndex, 0, pieceLength); 
           ConstBufferPtr cbf = req.encode();
           send(m_sock, cbf->buf(), cbf->size(), 0);
 
