@@ -115,35 +115,6 @@ Client::run()
 }
 
 void
-Client::connectPeer(Peer *peer) 
-{
-    struct addrinfo hints;
-    struct addrinfo* res;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET; // IPv4
-    hints.ai_socktype = SOCK_STREAM;
-
-    std::string peerPort = std::to_string(peer->getPort());
-
-    // get address
-    int status = 0;
-    if ((status = getaddrinfo(peer->getIp().c_str(), peerPort.c_str(), &hints, &res)) != 0)
-      throw Error("Cannot resolver peer ip");
-
-    struct sockaddr_in* ipv4 = (struct sockaddr_in*)res->ai_addr;
-    char ipstr[INET_ADDRSTRLEN] = {'\0'};
-    inet_ntop(res->ai_family, &(ipv4->sin_addr), ipstr, sizeof(ipstr));
-
-    if (connect(peer->getSock(), res->ai_addr, res->ai_addrlen) == -1) {
-      perror("connect");
-      throw Error("Cannot connect peer");
-    }
-
-    freeaddrinfo(res);
-}
-
-void
 Client::loadMetaInfo(const std::string& torrent)
 {
   std::ifstream is(torrent);
@@ -353,14 +324,11 @@ Client::prepareFile()
   // std::cout << "File length: " << fileLength << std::endl ;
 
   // initialize all pieces to false
-  m_piecesDone = std::vector<bool>();
+  m_piecesDone = std::vector<bool>(20);
+  m_piecesLocked = std::vector<bool>(20);
   for (int i=0; i<pieceCount; i++) {
-    m_piecesDone.push_back(false);
-  }
-
-  m_piecesLocked = std::vector<bool>();
-  for (int i=0; i<pieceCount; i++) {
-    m_piecesLocked.push_back(false);
+    m_piecesDone[i] = false;
+    m_piecesLocked[i] = false;
   }
 
   // open the file for reading 
@@ -385,13 +353,12 @@ Client::prepareFile()
         ConstBufferPtr pieceBuf = os.buf();
 
         if (equal(util::sha1(pieceBuf), m_metaInfo.getHashOfPiece(i))) {
-          m_piecesDone.at(i) = true;
-          m_piecesLocked.at(i) = true;
-          // std::cout << "piece " << i << " good" << std::endl;
+          m_piecesDone[i] = true;
+          m_piecesLocked[i] = true;
         }
         else {
-          m_piecesDone.at(i) = false;
-          m_piecesLocked.at(i) = false;
+          m_piecesDone[i] = false;
+          m_piecesLocked[i] = false;
           // std::cout << "piece " << i << " bad" << std::endl;
         }
       }
@@ -409,176 +376,5 @@ Client::prepareFile()
   return;
 } 
 
-//
-void 
-Client::peerProcedure(Peer *peer) 
-{
-  ConstBufferPtr resp = std::make_shared<Buffer> (1024, 1);
-  int peerSock = peer->getSock();
-
-  // Handshake that shi-
-  msg::HandShake hs(m_metaInfo.getHash(), "SIMPLEBT-TEST-PEERID");
-  ConstBufferPtr hsMsg = hs.encode();
-  send(peerSock, hsMsg->buf(), hsMsg->size(), 0);
-
-  std::cout << "Sent handshake" << std::endl;
-
-  // wait for a handshake (length 68) 
-  if ((resp = waitForResponse(peerSock, 68)) == NULL) {
-    std::cout << "Resp error in peer " << std::endl;
-    // pthread_exit(NULL);
-    return;
-  }
-
-  msg::HandShake hsRsp;
-  hsRsp.decode(resp);
-
-  // TODO: error checking, retry here if msg is corrupted
-
-  // check the info hashes match. if not, stop here
-  if (memcmp(m_metaInfo.getHash()->buf(), 
-             hsRsp.getInfoHash()->buf(), 
-             20) != 0) {
-    std::cout << "Detected incorrect info hash with peer " << std::endl;
-    close(peerSock);
-    // pthread_exit(NULL);
-    return;
-  }
-
-  std::cout << "Recieved handshake, info hash match!" << std::endl;
-
-  // Send bit field
-  // TODO: if multithreading, this is a critical section
-  
-  // construct a bitfield
-  int64_t fileLength = m_metaInfo.getLength();
-  int64_t pieceLength = m_metaInfo.getPieceLength();
-  int numPieces = fileLength / pieceLength + (fileLength % pieceLength == 0 ? 0 : 1);
-  int numBytes = numPieces/8 + (numPieces%8 == 0 ? 0 : 1);
-
-  char *bitfield = (char *) malloc(numBytes);
-  memset(bitfield, 0, numBytes);
-
-  int byteNum, bitNum;
-  for (int count=0; count < numPieces; count++)
-  {
-    byteNum = count / 8;    
-    bitNum = count % 8;
-
-    if (m_piecesDone.at(count)) {
-      // std::cout << "setting piece " << count << std::endl;
-      *(bitfield+byteNum) |= 1 << (7-bitNum);
-    } 
-  }
-
-  OBufferStream bfstream;
-  bfstream.write(bitfield, numBytes);
-  msg::Bitfield bf_struct(bfstream.buf());
-  ConstBufferPtr bf = bf_struct.encode();
-
-  std::cout << "constructed bitfield " << bf->size() << " " << numBytes << std::endl;
-  send(peerSock, bf->buf(), bf->size(), 0);
-
-  ConstBufferPtr bitfieldResp = std::make_shared<Buffer> (1024, 1);
-  // if ((bitfieldResp = waitForResponse(peerSock, bf->size())) == NULL) {
-  //   std::cout << "Resp error in peer " << std::endl;
-  //   // pthread_exit(NULL);
-  //   return;
-  // }
-
-  msg::Bitfield bf_resp;
-  bf_resp.decode(bitfieldResp);
-  peer->setBitfield(bf_resp.getBitfield(), numPieces);
-  std::cout << "recieved/parsed bitfield" << std::endl;
-
-  // TODO: more critical section 
-  bool foundPiece = false;
-  for (int i=0; i<numPieces; i++) {
-    if (!m_piecesDone.at(i) && peer->hasPiece(i)) {
-      peer->setActivePiece(i);
-      foundPiece = true;
-      std::cout << "Found needed piece " << i << std::endl;
-      break;
-    }
-  }
-
-  if (!foundPiece) {
-    std::cout << "Did not find a piece with peer" << std::endl;
-    // pthread_exit(NULL);
-    return;
-  }
-
-  msg::Interested interested;
-  ConstBufferPtr int_buf = interested.encode();
-
-  std::cout << "sending interested" << std::endl;
-  send(peerSock, int_buf->buf(), int_buf->size(), 0);
-
-  ConstBufferPtr unchokeResp = std::make_shared<Buffer> (1024, 1);
-  if ((unchokeResp = waitForResponse(peerSock, 1)) == NULL) {
-    std::cout << "Resp error in peer " << std::endl;
-    // pthread_exit(NULL);
-    return;
-  }
-
-  // check that it's the right message
-  // TODO: add try catch here?
-  msg::Unchoke unchoke;
-  unchoke.decode(unchokeResp);
-
-  std::cout << "got unchoke" << std::endl;
-
-  // TODO: handle half pieces
-  msg::Request request(peer->getActivePiece(), 0, m_metaInfo.getPieceLength());
-  ConstBufferPtr r_buf = request.encode();
-  send(peerSock, r_buf->buf(), r_buf->size(), 0);
-
-  ConstBufferPtr piece;
-  if ((piece = waitForResponse(peerSock, m_metaInfo.getPieceLength()+9)) == NULL) 
-  {
-    std::cout << "Resp error in peer " << std::endl;
-    // pthread_exit(NULL);
-    return;
-  }
-
-  std::cout << "recieved the piece! length: " << piece->size() << std::endl;
-  msg::Piece piece_struct;
-  piece_struct.decode(piece);
-  ConstBufferPtr piece_sha1 = util::sha1(piece_struct.getBlock());
-
-  if (!equal(piece_sha1, m_metaInfo.getHashOfPiece(0))) {
-    std::cout << "difference in hash" << std::endl ;
-  } else {
-    std::cout << "same hash!" << std::endl;
-  }
-
-
-  return;
-}
-
-ConstBufferPtr
-Client::waitForResponse(int sockfd, int responseLen)
-{
-  OBufferStream obuf;
-  int status;
-  int total=0;
-  char buf[512] = {0};
-
-  while (total < responseLen) {
-
-    memset(buf, '\0', sizeof(buf));
-    if ((status = recv(sockfd, buf, 512, 0)) == -1) {
-      perror("recv");
-      return NULL;
-    }
-
-    total += status;
-
-    obuf.write(buf, status);
-  }  
-
-  std::cout << obuf.buf()->size() << std::endl;
-  return obuf.buf();
-}
 
 } // namespace sbt

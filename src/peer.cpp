@@ -104,14 +104,12 @@ Peer::run()
     {
       // if they have a piece we want
       int pieceIndex = getFirstAvailablePiece();
-      log("found piece: " + std::to_string(pieceIndex));
       if (pieceIndex >= 0) {
+        log("found piece: " + std::to_string(pieceIndex));
         // if we are choked, send a interested msg
         if (!unchoked) {
-          log("not choked");
           msg::Interested interest;
           ConstBufferPtr cbf = interest.encode();
-          log("trying to send");
           send(m_sock, cbf->buf(), cbf->size(), 0);
 
           interested = true;
@@ -135,6 +133,8 @@ Peer::run()
           log("Send request message");
         }
       }
+    } else {
+      log("did not find a piece");
     }
 
     waitOnMessage();
