@@ -110,6 +110,7 @@ Peer::run()
         if (!unchoked) {
           msg::Interested interest;
           ConstBufferPtr cbf = interest.encode();
+          log("trying to send");
           send(m_sock, cbf->buf(), cbf->size(), 0);
 
           interested = true;
