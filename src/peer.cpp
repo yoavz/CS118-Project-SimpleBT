@@ -94,8 +94,6 @@ Peer::handshakeAndRun()
 void
 Peer::run()
 {
-  log("inside run");
-
   // TODO: when should we close with this peer?
   while (true) 
   {
@@ -132,9 +130,9 @@ Peer::run()
           requested = true;
           log("Send request message");
         }
+      } else {
+        log("did not find a piece");
       }
-    } else {
-      log("did not find a piece");
     }
 
     waitOnMessage();
@@ -337,6 +335,10 @@ Peer::setBitfield(ConstBufferPtr bf, int size)
       m_piecesDone.at(count) = false;
     }
   }
+
+  std::cout << "size of bitfield: " << m_piecesDone.size() << std::endl;
+
+  std::cout << "size of bitfield: " << m_piecesDone.size() << std::endl;
 }
 
 void 
