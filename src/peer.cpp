@@ -130,6 +130,7 @@ void Peer::handleHave(ConstBufferPtr cbf)
 
 void Peer::handleBitfield(ConstBufferPtr cbf)
 {
+  log("recieved bitfield");
   return;
 }
 
