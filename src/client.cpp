@@ -58,6 +58,9 @@ Client::Client(const std::string& port, const std::string& torrent)
   m_clientPort = boost::lexical_cast<uint16_t>(port);
 
   loadMetaInfo(torrent);
+
+  std::cout << "loaded metainfo" << std::endl;
+
   prepareFile();
 
   std::cout << "prepared file!" << std::endl;
@@ -357,7 +360,7 @@ Client::prepareFile()
 
   m_piecesLocked = std::vector<bool>();
   for (int i=0; i<pieceCount; i++) {
-    m_piecesDone.push_back(false);
+    m_piecesLocked.push_back(false);
   }
 
   // open the file for reading 

@@ -386,7 +386,6 @@ void Peer::handlePiece(ConstBufferPtr cbf)
   }
 
   //TODO: send have
-  //
   return;
 }
 
