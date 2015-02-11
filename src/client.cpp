@@ -82,6 +82,7 @@ Client::run()
       // Repeat if you also want to iterate through the second map.
 
       Peer *peer = &it->second;
+      peer->setClient(this);
 
       std::string peerPort = std::to_string(peer->getPort());
       if (peerPort == std::to_string(m_clientPort))

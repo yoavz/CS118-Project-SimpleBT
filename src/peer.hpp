@@ -6,8 +6,11 @@
 #include "common.hpp"
 #include "meta-info.hpp"
 #include "tracker-response.hpp"
+// #include "client.hpp"
 
 namespace sbt {
+
+class Client;
 
 class Peer 
 {
@@ -84,11 +87,23 @@ public:
     m_activePiece = pieceNum;
   }
 
+  void
+  setClient(Client *client)
+  {
+    m_client = client;
+  }
+
+  Client 
+  *getClient()
+  {
+    return m_client;
+  }
+
   int
   waitOnMessage();
 
 private:
-  // Client* m_parent;
+  Client* m_client;
 
   std::string m_peerId;    
   std::string m_ip;
