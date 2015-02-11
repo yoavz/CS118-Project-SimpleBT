@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include "peer.hpp"
+#include "msg/msg-base.hpp"
 
 namespace sbt {
 
@@ -48,7 +49,8 @@ Peer::waitOnMessage()
   // next byte is the ID 
   uint8_t id = *(lengthAndID+4);
 
-  std::cout << id << std::endl;
+  if (id == msg::MSG_ID_BITFIELD) 
+    std::cout << "bitfield" << std::endl;
 
   return 0;
 }
