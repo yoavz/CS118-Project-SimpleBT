@@ -261,6 +261,8 @@ Peer::waitOnMessage()
   // next byte is the ID 
   uint8_t id = *(msgBuf+4);
 
+  std::cout << "Parsed message length: " << length << std::endl;
+
   // reallocate the msgBuf to the proper length
   msgBuf = (char *)realloc(msgBuf, msgLength);
   if ((status = recv(m_sock, msgBuf+5, msgLength-5, 0)) == -1) {
