@@ -104,10 +104,11 @@ Peer::run()
     {
       // if they have a piece we want
       int pieceIndex = getFirstAvailablePiece();
-      log("got piece");
+      log("found piece: " + std::to_string(pieceIndex));
       if (pieceIndex >= 0) {
         // if we are choked, send a interested msg
         if (!unchoked) {
+          log("not choked");
           msg::Interested interest;
           ConstBufferPtr cbf = interest.encode();
           log("trying to send");
