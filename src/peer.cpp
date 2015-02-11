@@ -94,6 +94,8 @@ Peer::handshakeAndRun()
 void
 Peer::run()
 {
+  log("inside run");
+
   // TODO: when should we close with this peer?
   while (true) 
   {
@@ -102,6 +104,7 @@ Peer::run()
     {
       // if they have a piece we want
       int pieceIndex = getFirstAvailablePiece();
+      log("got piece");
       if (pieceIndex >= 0) {
         // if we are choked, send a interested msg
         if (!unchoked) {
@@ -257,6 +260,7 @@ Peer::waitOnMessage()
   // first, we wait on a length and ID, which will always be 5 bytes
   char *msgBuf = (char *) malloc (5);
   if ((status = recv(m_sock, msgBuf, 5, 0)) == -1) {
+    log("recv error");
     perror("recv");
     return -1;
   }
@@ -274,6 +278,7 @@ Peer::waitOnMessage()
     // reallocate the msgBuf to the proper length
     msgBuf = (char *)realloc(msgBuf, msgLength);
     if ((status = recv(m_sock, msgBuf+5, msgLength-5, 0)) == -1) {
+      log("recv error");
       perror("recv");
       return -1;
     }
