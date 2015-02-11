@@ -251,8 +251,17 @@ Peer::waitOnBitfield(int size)
   std::cout << "length: " << length << std::endl;
   std::cout << "is bitfield: " << (id == msg::MSG_ID_BITFIELD) << std::endl;
 
-  uint32_t a = *(reinterpret_cast<uint32_t *> (bfBuf+5)) >> 9;
-  std::cout << "bitfield as int: " << a << std::endl;
+  // with a (full!) bitfield length of 23
+  // bitfield = 1111 1111 1111 1111 1111 111|X XXXX XXXX
+  // where X's are bits we don't care about
+  char *bitfield = bfBuf+5;
+  uint32_t a = *(reinterpret_cast<uint32_t *> (bitfield));
+
+  // a >> 9 = 0000 0000 0|111 1111 1111 1111 1111 1111
+  uint32_t b = a >> 9;
+  char *shifted = reinterpret_cast<char *> (&b);
+
+  std::cout << "bitfield as int: " << b << std::endl;
 
   ConstBufferPtr cbf = std::make_shared<Buffer> (bfBuf, size);
   msg::Bitfield bf;
