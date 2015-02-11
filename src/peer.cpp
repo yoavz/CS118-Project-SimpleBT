@@ -376,10 +376,11 @@ void Peer::handleRequest(ConstBufferPtr cbf)
 
 void Peer::handlePiece(ConstBufferPtr cbf)
 {
-  log("recieved piece");
 
   msg::Piece piece;
   piece.decode(cbf);
+
+  log("recieved piece " + std::to_string(piece.getIndex()));
 
   ConstBufferPtr pieceSha1 = util::sha1(piece.getBlock());
   
