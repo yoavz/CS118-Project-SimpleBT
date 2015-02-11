@@ -6,11 +6,8 @@
 #include "common.hpp"
 #include "meta-info.hpp"
 #include "tracker-response.hpp"
-// #include "client.hpp"
 
 namespace sbt {
-
-class Client;
 
 class Peer 
 {
@@ -18,6 +15,12 @@ public:
   Peer (const std::string& peerId,
         const std::string& ip,
         uint16_t port);
+   
+  Peer (const std::string& peerId,
+        const std::string& ip,
+        uint16_t port,
+        std::vector<bool>* clientPiecesDone,
+        FILE *clientFile);
 
   void
   handshakeAndRun();
@@ -39,16 +42,16 @@ public:
     m_sock = sock;
   }
 
-  // bool
-  // getChoked()
-  // {
-  //   return m_choked;
-  // }
-
   const std::string&
   getPeerId()
   {
     return m_peerId;
+  }
+
+  void
+  setPeerId(const std::string& peerId)
+  {
+    m_peerId = peerId;
   }
 
   const std::string&
@@ -87,24 +90,25 @@ public:
     m_activePiece = pieceNum;
   }
 
-  void
-  setClient(Client *client)
+  void 
+  setClientData(std::vector<bool>* clientPiecesDone,
+                std::vector<uint8_t>* piecesHash,
+                ConstBufferPtr infoHash,
+                FILE *clientFile)
   {
-    m_client = client;
-  }
-
-  Client 
-  *getClient()
-  {
-    return m_client;
+    m_infoHash = infoHash;
+    m_piecesHash = piecesHash;
+    m_clientPiecesDone = clientPiecesDone;
+    m_clientFile = clientFile;
   }
 
   int
   waitOnMessage();
 
-private:
-  Client* m_client;
+  int
+  waitOnHandshake();
 
+private:
   std::string m_peerId;    
   std::string m_ip;
   uint16_t m_port;
@@ -112,13 +116,18 @@ private:
   int m_sock;
   int m_activePiece;
 
-  // bool m_choked;
-  // bool m_interested;
-
   std::vector<bool> m_piecesDone;
   ConstBufferPtr m_bitfield;
 
+  // client references
+  ConstBufferPtr m_infoHash;
+  std::vector<uint8_t>* m_piecesHash;
+  std::vector<bool>* m_clientPiecesDone;
+  FILE *m_clientFile;
+
 private:
+  int connectSocket();
+
   void log(std::string msg);
 
   void handleUnchoke(ConstBufferPtr cbf);

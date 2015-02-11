@@ -115,9 +115,6 @@ private:
   FILE *m_torrentFile;
   std::vector<bool> m_piecesDone;
   
-  // map of peers (sockfd) -> piece number 
-  // std::map<int, uint64_t> m_peerPieces;
-
   // list of peers (from tracker)
   std::map<std::string, Peer> m_peers;
 };

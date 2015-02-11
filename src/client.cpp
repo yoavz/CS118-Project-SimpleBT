@@ -75,6 +75,7 @@ Client::run()
 
   std::cout << "recieved and parsed tracker resp" << std::endl;
 
+  // attempt connecting to all peers
   for(std::map<std::string, Peer>::iterator it = m_peers.begin(); it != m_peers.end(); it++) {
 
       // iterator->first = key
@@ -82,21 +83,28 @@ Client::run()
       // Repeat if you also want to iterate through the second map.
 
       Peer *peer = &it->second;
-      peer->setClient(this);
 
-      std::string peerPort = std::to_string(peer->getPort());
-      if (peerPort == std::to_string(m_clientPort))
-        continue;
+      // set client data
+      std::vector<uint8_t> pieceHash = m_metaInfo.getPieces();
+      peer->setClientData(&m_piecesDone, &pieceHash, m_metaInfo.getHash(), m_torrentFile);
 
-      std::cout << "Connecting to " << peerPort << std::endl; 
+      peer->handshakeAndRun();
 
-      int peerSock = socket(AF_INET, SOCK_STREAM, 0);
+      // OLD SHIT
 
-      peer->setSock(peerSock);
-      connectPeer(peer);
-      std::cout << "Connected to " << peerPort << std::endl; 
-
-      peerProcedure(peer);
+      // std::string peerPort = std::to_string(peer->getPort());
+      // if (peerPort == std::to_string(m_clientPort))
+      //   continue;
+      //
+      // std::cout << "Connecting to " << peerPort << std::endl; 
+      //
+      // int peerSock = socket(AF_INET, SOCK_STREAM, 0);
+      //
+      // peer->setSock(peerSock);
+      // connectPeer(peer);
+      // std::cout << "Connected to " << peerPort << std::endl; 
+      //
+      // peerProcedure(peer);
   }
 
 }
@@ -121,7 +129,6 @@ Client::connectPeer(Peer *peer)
     struct sockaddr_in* ipv4 = (struct sockaddr_in*)res->ai_addr;
     char ipstr[INET_ADDRSTRLEN] = {'\0'};
     inet_ntop(res->ai_family, &(ipv4->sin_addr), ipstr, sizeof(ipstr));
-    // std::cout << "tracker address: " << ipstr << ":" << ntohs(ipv4->sin_port) << std::endl;
 
     if (connect(peer->getSock(), res->ai_addr, res->ai_addrlen) == -1) {
       perror("connect");
@@ -544,7 +551,6 @@ Client::peerProcedure(Peer *peer)
 ConstBufferPtr
 Client::waitForResponse(int sockfd, int responseLen)
 {
-
   OBufferStream obuf;
   int status;
   int total=0;
@@ -566,22 +572,5 @@ Client::waitForResponse(int sockfd, int responseLen)
   std::cout << obuf.buf()->size() << std::endl;
   return obuf.buf();
 }
-
-
-// TODO:
-// handles the response to the peer
-void 
-Client::handlePeerResponse(std::string peerId, const char *resp)
-{
-  return;
-}
-
-// TODO:
-// handles the request sent
-// int 
-// Client::buildPeerResponse(std::string peerId, std::ofstream& resp) 
-// {
-//   return 0;
-// }
 
 } // namespace sbt
