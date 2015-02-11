@@ -389,7 +389,14 @@ void Peer::handlePiece(ConstBufferPtr cbf)
     std::cout << "same hash!" << std::endl;
   }
 
-  //TODO: send have
+  requested = false;
+
+  //TODO: check if we have the file: if not, write it yo!
+
+  //TODO: warning critical section
+  (*m_clientPiecesDone)[piece.getIndex()] = true;
+
+  //TODO: send have 
   return;
 }
 
