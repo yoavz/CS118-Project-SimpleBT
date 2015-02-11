@@ -331,12 +331,12 @@ Peer::setBitfield(ConstBufferPtr bf, int size)
   for (int count=0; count < size; count++) {
     if (*bitfield & (1 << (size-count))) {
       m_piecesDone.at(count) = true;
+      std::cout << "piece " << count << " done"<<std::endl;
     } else {
       m_piecesDone.at(count) = false;
+      std::cout << "piece " << count << " needed"<<std::endl;
     }
   }
-
-  std::cout << "size of bitfield: " << m_piecesDone.size() << std::endl;
 
   std::cout << "size of bitfield: " << m_piecesDone.size() << std::endl;
 }
