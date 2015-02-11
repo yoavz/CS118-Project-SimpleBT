@@ -356,13 +356,14 @@ Peer::setBitfield(char *bitfield, int size)
   // where X's are bits we don't care about
   uint32_t a = *(reinterpret_cast<uint32_t *> (bitfield));
 
-  // a >> 9 = 0000 0000 0|111 1111 1111 1111 1111 1111
-  uint32_t b = a >> (32-size);
   std::cout << "bitfield: ";
   for (int i=0; i<32; i++)
-    std::cout << ((b >> (31-i)) & 1);
+    std::cout << ((a >> (31-i)) & 1);
   std::cout << std::endl;
-  std::cout << "bitfield (as uint32_t): " << b << std::endl;
+  std::cout << "bitfield (as uint32_t): " << a << std::endl;
+
+  // a >> 9 = 0000 0000 0|111 1111 1111 1111 1111 1111
+  uint32_t b = a >> (32-size);
 
   for (int count=0; count < size; count++) {
     uint32_t to_check = size-count-1;
