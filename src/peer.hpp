@@ -101,9 +101,9 @@ public:
                 MetaInfo *metaInfo,
                 FILE *clientFile)
   {
-    m_metaInfo = metaInfo;
     m_clientPiecesDone = clientPiecesDone;
     m_clientPiecesLocked = clientPiecesLocked;
+    m_metaInfo = metaInfo;
     m_clientFile = clientFile;
   }
 

@@ -308,8 +308,8 @@ Client::prepareFile()
   // std::cout << "File length: " << fileLength << std::endl ;
 
   // initialize all pieces to false
-  m_piecesDone = std::vector<bool>(20);
-  m_piecesLocked = std::vector<bool>(20);
+  m_piecesDone = std::vector<bool>(pieceCount);
+  m_piecesLocked = std::vector<bool>(pieceCount);
   for (int i=0; i<pieceCount; i++) {
     m_piecesDone[i] = false;
     m_piecesLocked[i] = false;
