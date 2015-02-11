@@ -83,6 +83,9 @@ Client::run()
       // Repeat if you also want to iterate through the second map.
 
       Peer *peer = &it->second;
+      std::string peerPort = std::to_string(peer->getPort());
+      if (peerPort == std::to_string(m_clientPort))
+        continue;
 
       // set client data
       std::vector<uint8_t> pieceHash = m_metaInfo.getPieces();
@@ -92,9 +95,6 @@ Client::run()
 
       // OLD SHIT
 
-      // std::string peerPort = std::to_string(peer->getPort());
-      // if (peerPort == std::to_string(m_clientPort))
-      //   continue;
       //
       // std::cout << "Connecting to " << peerPort << std::endl; 
       //
