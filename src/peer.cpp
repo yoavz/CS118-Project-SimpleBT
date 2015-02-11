@@ -380,8 +380,7 @@ void Peer::handlePiece(ConstBufferPtr cbf)
   msg::Piece piece;
   piece.decode(cbf);
 
-  log("recieved piece " + std::to_string(piece.getIndex()));
-
+  log("recieved piece " + std::to_string(piece.getIndex()) + " length: " + std::to_string(piece.getBlock()->size()));
   ConstBufferPtr pieceSha1 = util::sha1(piece.getBlock());
   
   if (!equal(pieceSha1, m_metaInfo->getHashOfPiece(piece.getIndex()))) {
