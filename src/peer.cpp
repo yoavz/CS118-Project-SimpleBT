@@ -372,8 +372,8 @@ Peer::setBitfield(char *bitfield, int size)
 
   for (int count=0; count < size; count++) {
     uint32_t to_check = size-count-1;
-    std::cout << (((*shifted) >> to_check) & 1);
-    if ((*shifted >> to_check) & 1) {
+    std::cout << ((b >> to_check) & 1);
+    if ((b >> to_check) & 1) {
       m_piecesDone[count] = true;
       // std::cout << "found bit: " << to_check << std::endl;
       // std::cout << "found bit (as num) : " << (1 << to_check) << std::endl;
