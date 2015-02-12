@@ -74,7 +74,7 @@ Client::log(std::string msg)
 }
 
 void * 
-runPeer(void *peer)
+Client::runPeer(void *peer)
 {
   std::cout <<" anything?" << std::endl;
   Peer *p = static_cast<Peer *>(peer); 
@@ -113,7 +113,7 @@ Client::run()
                           m_torrentFile);
 
       log("creating thread");
-      pthread_create(&threads[0], 0, &runPeer, static_cast<void*>(&peer));
+      pthread_create(&threads[0], 0, (Client::runPeer), static_cast<void*>(&peer));
       // peer.handshakeAndRun();
 
       //TODO: remove for multithreading

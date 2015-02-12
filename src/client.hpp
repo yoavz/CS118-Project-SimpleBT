@@ -65,6 +65,9 @@ public:
     return m_trackerFile;
   }
 
+  static void * 
+  runPeer(void *peer);
+
 private:
   void
   loadMetaInfo(const std::string& torrent);
@@ -80,9 +83,6 @@ private:
 
   void 
   prepareFile();
-
-  // void * 
-  // runPeer(void *peer);
 
   void
   log(std::string msg);
