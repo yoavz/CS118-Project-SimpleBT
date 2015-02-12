@@ -95,9 +95,7 @@ Client::run()
                           m_torrentFile);
 
       peer.handshakeAndRun();
-
   }
-
 }
 
 void
@@ -174,12 +172,12 @@ Client::sendTrackerRequest()
   TrackerRequestParam param;
 
   param.setInfoHash(m_metaInfo.getHash());
-  param.setPeerId("01234567890123456789"); //TODO:
-  param.setIp("127.0.0.1"); //TODO:
-  param.setPort(m_clientPort); //TODO:
-  param.setUploaded(100); //TODO:
-  param.setDownloaded(200); //TODO:
-  param.setLeft(300); //TODO:
+  param.setPeerId("SIMPLEBT-TEST-PEERID");
+  param.setIp("127.0.0.1"); 
+  param.setPort(m_clientPort); 
+  param.setUploaded(0); //TODO:
+  param.setDownloaded(0); //TODO:
+  param.setLeft(m_metaInfo.getLength()); //TODO:
   if (m_isFirstReq)
     param.setEvent(TrackerRequestParam::STARTED);
 
