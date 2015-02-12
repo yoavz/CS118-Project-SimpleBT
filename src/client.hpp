@@ -85,7 +85,7 @@ private:
   // runPeer(void *peer);
 
   void
-  log(std::string& msg);
+  log(std::string msg);
 
 private:
   MetaInfo m_metaInfo;

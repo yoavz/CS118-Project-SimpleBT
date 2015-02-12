@@ -68,7 +68,7 @@ Client::Client(const std::string& port, const std::string& torrent)
 }
 
 void
-log(std::string& msg)
+Client::log(std::string msg)
 {
   std::cout << "(Client): " << msg << std::endl;
 }
@@ -76,10 +76,9 @@ log(std::string& msg)
 void * 
 runPeer(void *peer)
 {
+  std::cout <<" anything?" << std::endl;
   Peer *p = static_cast<Peer *>(peer); 
-
   std::cout << "(Client): running peer " << p->getPeerId() << std::endl;
-
   p->handshakeAndRun();
 
   return NULL;
@@ -113,6 +112,7 @@ Client::run()
                           &m_peers,
                           m_torrentFile);
 
+      log("creating thread");
       pthread_create(&threads[0], 0, &runPeer, static_cast<void*>(&peer));
       // peer.handshakeAndRun();
 
