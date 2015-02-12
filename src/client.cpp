@@ -116,7 +116,6 @@ Client::acceptPeers(void *c)
     bool foundThread = false;
 
     // check if we have enough threads and grab one 
-    log(std::to_string(client->MAX_THREAD));
     pthread_mutex_lock(&client->thread_count_mutex);
     for (int i=0; i < client->MAX_THREAD; i++) {
       if (!client->isUsed[i]) {

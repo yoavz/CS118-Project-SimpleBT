@@ -257,7 +257,6 @@ Peer::waitOnBitfield(int size)
 
   // next bytes are the bitfield
   char *bitfield = bfBuf+5;
-
   setBitfield(bitfield, m_metaInfo->getNumPieces());
 
   return 0;
