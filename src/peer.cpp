@@ -99,7 +99,6 @@ Peer::handshakeAndRun()
 void
 Peer::run()
 {
-  // TODO: when should we close with this peer?
   while (true) 
   {
     // check if all pieces are done
@@ -257,9 +256,6 @@ Peer::waitOnBitfield(int size)
   // next byte is the ID 
   uint8_t id = *(bfBuf+4);
 
-  // std::cout << "length: " << length << std::endl;
-  // std::cout << "is bitfield: " << (id == msg::MSG_ID_BITFIELD) << std::endl;
-
   // next bytes are the bitfield
   char *bitfield = bfBuf+5;
   setBitfield(bitfield, m_metaInfo->getNumPieces());
@@ -351,8 +347,6 @@ Peer::waitOnMessage()
 void
 Peer::setBitfield(char *bitfield, int size)
 {
-  // TODO: fix this function
-
   if (size > 32) {
     log("ERROR: can't yet handle bitfields of size > 32");
     m_piecesDone = std::vector<bool> (size);
@@ -361,33 +355,30 @@ Peer::setBitfield(char *bitfield, int size)
 
   m_piecesDone = std::vector<bool> (size);
 
-  // with a (full!) bitfield length of 23
-  // bitfield = 1111 1111 1111 1111 1111 111|X XXXX XXXX
-  // where X's are bits we don't care about
-  uint32_t a = *(reinterpret_cast<uint32_t *> (bitfield));
-
-  std::cout << "bitfield: ";
-  for (int i=0; i<32; i++)
-    std::cout << ((a >> (31-i)) & 1);
-  std::cout << std::endl;
-  std::cout << "bitfield (as uint32_t): " << a << std::endl;
-
-  // a >> 9 = 0000 0000 0|111 1111 1111 1111 1111 1111
-  uint32_t b = a >> (32-size);
-
-  for (int count=0; count < size; count++) {
-    uint32_t to_check = size-count-1;
-    if ((a >> to_check) & 1) {
-      m_piecesDone[count] = true;
-      // std::cout << "found bit: " << to_check << std::endl;
-      // std::cout << "found bit (as num) : " << (1 << to_check) << std::endl;
+  for (int i=0; i < size; i++) {
+    if (*bitfield & (1 << (32-i))) {
+      m_piecesDone[i] = true; 
     } else {
-      // TODO: fix
-      m_piecesDone[count] = true;
-      // std::cout << "piece " << count << " needed"<<std::endl;
+      m_piecesDone[i] = false;
     }
   }
+  
   return;
+
+  // OLD LOGGING CODE
+  // // with a (full!) bitfield length of 23
+  // // bitfield = 1111 1111 1111 1111 1111 111|X XXXX XXXX
+  // // where X's are bits we don't care about
+  // uint32_t a = *(reinterpret_cast<uint32_t *> (bitfield));
+  //
+  // std::cout << "bitfield: ";
+  // for (int i=0; i<32; i++)
+  //   std::cout << ((a >> (31-i)) & 1);
+  // std::cout << std::endl;
+  // std::cout << "bitfield (as uint32_t): " << a << std::endl;
+  //
+  // // a >> 9 = 0000 0000 0|111 1111 1111 1111 1111 1111
+  // uint32_t b = a >> (32-size);
 }
 
 void 
