@@ -22,6 +22,7 @@
 #ifndef SBT_CLIENT_HPP
 #define SBT_CLIENT_HPP
 
+#include <pthread.h>
 #include "common.hpp"
 #include "meta-info.hpp"
 #include "tracker-response.hpp"
@@ -80,20 +81,8 @@ private:
   void 
   prepareFile();
 
-  void 
-  handlePeerResponse(std::string peerId, const char *resp);
-
-  // int 
-  // buildPeerResponse(int sockfd, std::ofstream& resp);
-
-  ConstBufferPtr
-  waitForResponse(int sockfd, int responseLen);
-
-  void 
-  peerProcedure(Peer *peer);
-
-  void
-  connectPeer(Peer *peer);
+  // void 
+  // runPeer(void *peer);
 
 private:
   MetaInfo m_metaInfo;
@@ -115,6 +104,12 @@ private:
 
   // list of peers (from tracker)
   std::vector<Peer> m_peers;
+
+  pthread_t threads[20];
+  bool isUsed[20] = {0};
+  const int MAX_THREAD = 20;
+  pthread_mutex_t thread_count_mutex;
+  int threadCount;
 };
 
 } // namespace sbt

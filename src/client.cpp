@@ -57,11 +57,23 @@ Client::Client(const std::string& port, const std::string& torrent)
 
   m_clientPort = boost::lexical_cast<uint16_t>(port);
 
+  // thread initialization stuff
+  threadCount = 0;
+
   loadMetaInfo(torrent);
   std::cout << "loaded metainfo" << std::endl;
   prepareFile();
   std::cout << "prepared file!" << std::endl;
   run();
+}
+
+void * 
+runPeer(void *peer)
+{
+  Peer *p = static_cast<Peer *>(peer); 
+  p->handshakeAndRun();
+
+  return NULL;
 }
 
 void
@@ -74,7 +86,7 @@ Client::run()
 
   // std::cout << "recieved and parsed tracker resp" << std::endl;
 
-  // attempt connecting to all peers
+  // attempt connecting to all peers - 1 peer
   for (auto& peer : m_peers) {
 
       // iterator->first = key
@@ -94,7 +106,12 @@ Client::run()
                           &m_peers,
                           m_torrentFile);
 
-      peer.handshakeAndRun();
+      pthread_create(&threads[0], 0, &runPeer, static_cast<void*>(&peer));
+      // peer.handshakeAndRun();
+
+      //TODO: remove for multithreading
+      //only connect to one peer
+      break;
   }
 }
 
