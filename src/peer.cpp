@@ -102,6 +102,12 @@ Peer::run()
   // TODO: when should we close with this peer?
   while (true) 
   {
+    // check if all pieces are done
+    if (allPiecesDone()) {
+      log("all pieces done");
+      pthread_exit(NULL);
+    }
+
     // if we are not waiting on unchoke or piece already 
     if (!interested && !requested)
     {
@@ -350,6 +356,8 @@ Peer::waitOnMessage()
 void
 Peer::setBitfield(char *bitfield, int size)
 {
+  // TODO: fix this function
+
   if (size > 32) {
     log("ERROR: can't yet handle bitfields of size > 32");
     m_piecesDone = std::vector<bool> (size);
@@ -374,12 +382,13 @@ Peer::setBitfield(char *bitfield, int size)
 
   for (int count=0; count < size; count++) {
     uint32_t to_check = size-count-1;
-    if ((b >> to_check) & 1) {
+    if ((a >> to_check) & 1) {
       m_piecesDone[count] = true;
       // std::cout << "found bit: " << to_check << std::endl;
       // std::cout << "found bit (as num) : " << (1 << to_check) << std::endl;
     } else {
-      m_piecesDone[count] = false;
+      // TODO: fix
+      m_piecesDone[count] = true;
       // std::cout << "piece " << count << " needed"<<std::endl;
     }
   }
@@ -530,26 +539,49 @@ Peer::writeToFile(int pieceIndex, ConstBufferPtr piece)
     return -1;
   }
 
-  if (piece->size() != m_metaInfo->getPieceLength()) {
+  // sanity check: piece length
+  int pieceLength = m_metaInfo->getPieceLength(); 
+  // if it's the final piece, it's a diff length
+  if (pieceIndex == m_metaInfo->getNumPieces()-1) {
+    pieceLength = m_metaInfo->getLength() % m_metaInfo->getPieceLength();
+    if (pieceLength == 0)
+      pieceLength = m_metaInfo->getPieceLength();
+  }
+
+  if (piece->size() != pieceLength) {
     log("Incorrect piece length in writeToFile");
     return -1;
   }
 
   // TODO: write to file lock here
-  // warning: critical section
   int piecePosStart = pieceIndex * m_metaInfo->getPieceLength();
-  
-  // seek to the correct place in file
+
+  // fseek
   fseek(m_clientFile, piecePosStart, SEEK_SET);
 
   // write the buffer
   fwrite(piece->buf(), 1, piece->size(), m_clientFile);
+
+  log("piece pos start: " + std::to_string(piecePosStart));
 
   // update bytes downloaded
   // TODO: critical section inside here
   m_metaInfo->increaseBytesDownloaded(m_metaInfo->getPieceLength());
 
   return 0;
+}
+
+// TODO: warning critical section
+bool
+Peer::allPiecesDone()
+{
+  for (int i=0; i<m_metaInfo->getNumPieces(); i++) 
+  {
+    if (!m_clientPiecesDone->at(i))
+      return false;
+  }
+
+  return true;
 }
 
 } // namespace sbt

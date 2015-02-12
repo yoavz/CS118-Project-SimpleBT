@@ -96,6 +96,9 @@ private:
   static void *
   acceptPeers(void *c);
 
+  bool
+  allPiecesDone();
+
 private:
   MetaInfo m_metaInfo;
   std::string m_trackerHost;

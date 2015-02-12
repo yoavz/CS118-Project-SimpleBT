@@ -258,6 +258,13 @@ Client::run()
       m_alarm = false;
     }
 
+    // check if pieces are done
+    if (allPiecesDone()) {
+      log("detected all pieces done");
+      fclose(m_torrentFile);
+      return;
+    }
+
     sleep(0.5);
   }
 }
@@ -435,7 +442,6 @@ Client::recvTrackerResponse()
 
   close(m_trackerSock);
 
-
   bencoding::Dictionary dict;
 
   std::stringstream tss;
@@ -507,8 +513,9 @@ Client::prepareFile()
         ConstBufferPtr pieceBuf = os.buf();
 
         if (equal(util::sha1(pieceBuf), m_metaInfo.getHashOfPiece(i))) {
-          m_piecesDone[i] = true;
-          m_piecesLocked[i] = true;
+          // TODO: whaaa
+          m_piecesDone[i] = false;
+          m_piecesLocked[i] = false;
         }
         else {
           m_piecesDone[i] = false;
@@ -530,5 +537,17 @@ Client::prepareFile()
   return;
 } 
 
+// TODO: critical section
+bool
+Client::allPiecesDone()
+{
+  for (int i=0; i<m_metaInfo.getNumPieces(); i++) 
+  {
+    if (!m_piecesDone.at(i))
+      return false;
+  }
+
+  return true;
+}
 
 } // namespace sbt

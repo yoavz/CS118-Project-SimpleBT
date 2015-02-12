@@ -172,6 +172,7 @@ private:
   int waitOnMessage();
   int waitOnHandshake();
   int writeToFile(int pieceIndex, ConstBufferPtr piece);
+  bool allPiecesDone();
 };
 
 } // namespace sbt
