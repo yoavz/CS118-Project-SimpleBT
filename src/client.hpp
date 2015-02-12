@@ -104,9 +104,6 @@ private:
   uint16_t m_clientPort;
 
   int m_trackerSock;
-  int m_serverSock = -1;
-
-  fd_set m_readSocks;
 
   uint64_t m_interval;
   bool m_isFirstReq;
@@ -115,7 +112,7 @@ private:
   FILE *m_torrentFile;
   std::vector<bool> m_piecesDone;
   std::vector<bool> m_piecesLocked;
-  
+
   // list of peers (from tracker)
   std::vector<Peer> m_peers;
 };

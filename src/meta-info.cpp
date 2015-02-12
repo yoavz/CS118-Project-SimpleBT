@@ -81,6 +81,9 @@ MetaInfo::MetaInfo()
   : m_info(new bencoding::Dictionary)
 {
   m_root.insert(INFO, m_info);
+
+  bytesUploaded = 0;
+  bytesDownloaded = 0;
 }
 
 void
@@ -102,6 +105,9 @@ MetaInfo::wireDecode(std::istream& is)
     m_root = bencoding::Dictionary();
     throw bencoding::Error("no info in meta-info");
   }
+
+  bytesUploaded = 0;
+  bytesDownloaded = 0;
 }
 
 void

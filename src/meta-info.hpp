@@ -118,6 +118,30 @@ public:
     return fileLength / pieceLength + (fileLength % pieceLength == 0 ? 0 : 1);
   }
 
+  int
+  getBytesDownloaded()
+  {
+    return bytesDownloaded;
+  }
+
+  void
+  setBytesDownloaded(int bytes)
+  {
+    bytesDownloaded = bytes;
+  }
+
+  int
+  getBytesUploaded()
+  {
+    return bytesUploaded;
+  }
+
+  void
+  setBytesUploaded(int bytes)
+  {
+    bytesUploaded = bytes;
+  }
+
 private:
   static const std::string ANNOUNCE;
   static const std::string INFO;
@@ -128,9 +152,11 @@ private:
   static const std::string FILES;
   static const std::string PATH;
 
-
   bencoding::Dictionary m_root;
   std::shared_ptr<bencoding::Dictionary> m_info;
+
+  int bytesUploaded;
+  int bytesDownloaded; 
 };
 
 } // namespace sbt

@@ -264,7 +264,6 @@ Client::recvTrackerResponse()
   }
 
   close(m_trackerSock);
-  FD_CLR(m_trackerSock, &m_readSocks);
 
   bencoding::Dictionary dict;
 
