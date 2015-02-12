@@ -171,13 +171,17 @@ Client::sendTrackerRequest()
 {
   TrackerRequestParam param;
 
+  int upload = m_metaInfo.getBytesUploaded();
+  int download = m_metaInfo.getBytesDownloaded();
+  int left = m_metaInfo.getLength() - download;
+
   param.setInfoHash(m_metaInfo.getHash());
   param.setPeerId("SIMPLEBT-TEST-PEERID");
   param.setIp("127.0.0.1"); 
   param.setPort(m_clientPort); 
-  param.setUploaded(0); //TODO:
-  param.setDownloaded(0); //TODO:
-  param.setLeft(m_metaInfo.getLength()); //TODO:
+  param.setUploaded(upload);
+  param.setDownloaded(download);
+  param.setLeft(left); 
   if (m_isFirstReq)
     param.setEvent(TrackerRequestParam::STARTED);
 
