@@ -521,6 +521,10 @@ Peer::writeToFile(int pieceIndex, ConstBufferPtr piece)
   // write the buffer
   fwrite(piece->buf(), 1, piece->size(), m_clientFile);
 
+  // update bytes downloaded
+  // TODO: critical section inside here
+  m_metaInfo->increaseBytesDownloaded(m_metaInfo->getPieceLength());
+
   return 0;
 }
 

@@ -22,6 +22,7 @@
 #ifndef SBT_META_INFO_HPP
 #define SBT_META_INFO_HPP
 
+#include <pthread.h>
 #include "util/bencoding.hpp"
 
 namespace sbt {
@@ -118,6 +119,8 @@ public:
     return fileLength / pieceLength + (fileLength % pieceLength == 0 ? 0 : 1);
   }
 
+  //TODO: add locks to bytes uploaded/downloaded
+  
   int
   getBytesDownloaded()
   {
@@ -125,9 +128,9 @@ public:
   }
 
   void
-  setBytesDownloaded(int bytes)
+  increaseBytesDownloaded(int bytes)
   {
-    bytesDownloaded = bytes;
+    bytesDownloaded += bytes;
   }
 
   int
@@ -137,9 +140,9 @@ public:
   }
 
   void
-  setBytesUploaded(int bytes)
+  increaseBytesUploaded(int bytes)
   {
-    bytesUploaded = bytes;
+    bytesUploaded += bytes;
   }
 
 private:
