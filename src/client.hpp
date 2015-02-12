@@ -88,7 +88,13 @@ private:
   alarmHandler(int sig);
 
   static void * 
-  runPeer(void *peer);
+  runHandshakePeer(void *peer);
+
+  static void * 
+  runAcceptPeer(void *peer);
+
+  static void *
+  acceptPeers(void *c);
 
 private:
   MetaInfo m_metaInfo;
@@ -99,6 +105,7 @@ private:
   uint16_t m_clientPort;
 
   int m_trackerSock;
+  int m_listeningSock;
 
   uint64_t m_interval;
   bool m_isFirstReq;
@@ -112,10 +119,9 @@ private:
   std::vector<Peer> m_peers;
 
   pthread_t threads[20];
-  const int MAX_THREAD = 20;
+  static const int MAX_THREAD = 20;
   pthread_mutex_t thread_count_mutex;
   bool isUsed[20] = {0};
-  int threadCount;
 
   // for alarm functionality
   static bool m_alarm;

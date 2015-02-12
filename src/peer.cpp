@@ -27,6 +27,30 @@ namespace sbt {
 {
 }
 
+  Peer::Peer (int sockfd)
+  : m_sock(sockfd) 
+  , interested(false) 
+  , requested(false) 
+  , unchoked(false) 
+  , unchoking(false) 
+{
+}
+
+// This function responds to the handshake of a 
+// peer attempting to initiate a connection, 
+// exchanges bitfields, and calls the main
+// run() function of the Peer
+void
+Peer::respondAndRun()
+{
+  log("Responding to handshake...");
+
+  // socket should be set at this point (by listen)
+}
+
+// This function attempts to connect by initiating
+// a handshake, exchanges bitfields, and calls the
+// main run() function of the Peer
 void
 Peer::handshakeAndRun()
 {

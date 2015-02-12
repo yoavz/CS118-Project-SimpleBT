@@ -16,9 +16,14 @@ public:
   Peer (const std::string& peerId,
         const std::string& ip,
         uint16_t port);
+
+  Peer (int sockfd);
    
   void
   handshakeAndRun();
+
+  void
+  respondAndRun();
 
   void
   run();

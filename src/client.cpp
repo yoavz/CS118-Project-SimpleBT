@@ -59,9 +59,6 @@ Client::Client(const std::string& port, const std::string& torrent)
 
   m_clientPort = boost::lexical_cast<uint16_t>(port);
 
-  // thread initialization stuff
-  threadCount = 0;
-
   loadMetaInfo(torrent);
   std::cout << "loaded metainfo" << std::endl;
   prepareFile();
@@ -75,12 +72,114 @@ Client::log(std::string msg)
   std::cout << "(Client): " << msg << std::endl;
 }
 
+void *
+Client::acceptPeers(void *c)
+{
+  // since this is a static method, we 
+  // must recover the class instance
+  Client *client = static_cast<Client *>(c);
+
+  client->log("Attempting to accept peers...");
+
+  // create a TCP socket
+  client->m_listeningSock = socket(AF_INET, SOCK_STREAM, 0);
+
+  // allow others to reused address
+  int yes =1;
+  if (setsockopt(client->m_listeningSock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+    perror("setsockopt");
+    return NULL;
+  }
+
+  // bind address to socket
+  struct sockaddr_in addr;
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(40000);
+  addr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+  memset(addr.sin_zero, '\0', sizeof(addr.sin_zero));
+  if (bind(client->m_listeningSock, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+    perror("bind");
+    return NULL;
+  }
+
+  // set the socket to listen
+  if (listen(client->m_listeningSock, 10) == -1) {
+    perror("listen");
+    return NULL;
+  }
+
+  client->log("Listening on sock");
+
+  while (true) {
+
+    int threadId;
+    bool foundThread = false;
+
+    // check if we have enough threads and grab one 
+    log(std::to_string(client->MAX_THREAD));
+    pthread_mutex_lock(&client->thread_count_mutex);
+    for (int i=0; i < client->MAX_THREAD; i++) {
+      if (!client->isUsed[i]) {
+        client->isUsed[i] = true;
+        threadId = i;
+        foundThread = true;
+        client->log("grabbed thread " + std::to_string(threadId));
+        break;
+      }
+    }
+    pthread_mutex_unlock(&client->thread_count_mutex);
+
+
+    // if no threads are found
+    if (!foundThread) {
+      sleep(1);
+      continue;
+    }
+
+    client->log("accept()...");
+
+    // wait for a connection with accept()
+    struct sockaddr_in clientAddr;
+    socklen_t clientAddrSize;
+    int clientSockfd = accept(client->m_listeningSock, (struct sockaddr*)&clientAddr, &clientAddrSize);
+
+    if (clientSockfd == -1) {
+      perror("accept");
+      return NULL;
+    }
+
+    char ipstr[INET_ADDRSTRLEN] = {'\0'};
+    inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
+    client->log("Accepted a connection from: " + std::string(ipstr) + ":" + std::to_string(ntohs(clientAddr.sin_port)));
+
+    // initialize a peer and run it 
+    Peer p(clientSockfd);
+    pthread_create(&client->threads[threadId], 0, (Client::runAcceptPeer), static_cast<void*>(&p));
+
+  }
+  
+}
+
+// this function should be called from pthread_create
+// it runs a peer who initiates the handshake
 void * 
-Client::runPeer(void *peer)
+Client::runHandshakePeer(void *peer)
 {
   Peer *p = static_cast<Peer *>(peer); 
-  std::cout << "(Client): running peer " << p->getPeerId() << std::endl;
+  std::cout << "(Client): running handshake peer " << p->getPeerId() << std::endl;
   p->handshakeAndRun();
+
+  return NULL;
+}
+
+// this function should be called from pthread_create
+// it runs a peer who accepts the handshake
+void * 
+Client::runAcceptPeer(void *peer)
+{
+  Peer *p = static_cast<Peer *>(peer); 
+  std::cout << "(Client): running accept peer " << p->getPeerId() << std::endl;
+  p->respondAndRun();
 
   return NULL;
 }
@@ -94,6 +193,7 @@ Client::alarmHandler(int sig)
   return;
 }
 
+
 void
 Client::run()
 {
@@ -106,6 +206,10 @@ Client::run()
 
   // handle the alarm with this function
   signal(SIGALRM, alarmHandler);
+
+  // setup listening
+  // isUsed[1] = true;
+  // pthread_create(&threads[1], 0, (Client::acceptPeers), static_cast<void*>(this));
 
   // attempt connecting to all peers 
   for (auto& peer : m_peers) {
@@ -127,7 +231,8 @@ Client::run()
                          m_torrentFile);
 
       // run a peer in a new thread
-      pthread_create(&threads[0], 0, (Client::runPeer), static_cast<void*>(&peer));
+      isUsed[0] = true;
+      pthread_create(&threads[0], 0, (Client::runHandshakePeer), static_cast<void*>(&peer));
 
       //TODO: remove for multithreading
       //only connect to one peer
@@ -142,6 +247,8 @@ Client::run()
       connectTracker();
       sendTrackerRequest();
       recvTrackerResponse();
+
+      log("Sent/recieved tracker response. next interval: " + std::to_string(m_interval));
 
       // set the alarm to go off after m_interval seconds
       alarm(m_interval);
@@ -351,7 +458,6 @@ Client::recvTrackerResponse()
     m_isFirstRes = false;
   }
 
-  log("Sent/recieved tracker response. next interval: " + std::to_string(m_interval));
 }
 
 // Prepares the destination data file
@@ -368,10 +474,6 @@ Client::prepareFile()
   int pieceCount = m_metaInfo.getNumPieces(); 
   int finalPieceLength = fileLength % pieceLength;
   if (finalPieceLength == 0) finalPieceLength = pieceLength;
-
-  // std::cout << "Piece count: " << pieceCount << std::endl ;
-  // std::cout << "Piece length: " << pieceLength << std::endl ;
-  // std::cout << "File length: " << fileLength << std::endl ;
 
   // initialize all pieces to false
   m_piecesDone = std::vector<bool>(pieceCount);
