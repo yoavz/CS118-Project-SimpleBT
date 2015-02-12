@@ -67,10 +67,19 @@ Client::Client(const std::string& port, const std::string& torrent)
   run();
 }
 
+void
+log(std::string& msg)
+{
+  std::cout << "(Client): " << msg << std::endl;
+}
+
 void * 
 runPeer(void *peer)
 {
   Peer *p = static_cast<Peer *>(peer); 
+
+  std::cout << "(Client): running peer " << p->getPeerId() << std::endl;
+
   p->handshakeAndRun();
 
   return NULL;
@@ -96,8 +105,6 @@ Client::run()
       std::string peerPort = std::to_string(peer.getPort());
       if (peerPort == std::to_string(m_clientPort)) 
         continue;
-
-      std::cout << "running peer " << peer.getPeerId() << std::endl;
 
       // set client data
       peer.setClientData(&m_piecesDone, 

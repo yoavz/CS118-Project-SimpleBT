@@ -81,8 +81,11 @@ private:
   void 
   prepareFile();
 
-  // void 
+  // void * 
   // runPeer(void *peer);
+
+  void
+  log(std::string& msg);
 
 private:
   MetaInfo m_metaInfo;
@@ -106,9 +109,9 @@ private:
   std::vector<Peer> m_peers;
 
   pthread_t threads[20];
-  bool isUsed[20] = {0};
   const int MAX_THREAD = 20;
   pthread_mutex_t thread_count_mutex;
+  bool isUsed[20] = {0};
   int threadCount;
 };
 
