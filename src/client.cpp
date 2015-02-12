@@ -217,10 +217,6 @@ Client::run()
       // iterator->second = value
       // Repeat if you also want to iterate through the second map.
 
-      std::string peerPort = std::to_string(peer.getPort());
-      if (peerPort == std::to_string(m_clientPort)) 
-        continue;
-
       // pass references to the peers so that they can modify/access
       // piecesDone, the file, etc.
       peer.setClientData(&m_piecesDone, 
@@ -456,6 +452,11 @@ Client::recvTrackerResponse()
   if (m_isFirstRes) {
     for (const auto& peer : infos) {
       std::cout << peer.ip << ":" << peer.port << std::endl;
+
+      // if it's the client, skip
+      if (peer.port == m_clientPort) 
+        continue;
+
       Peer p(peer.peerId, peer.ip, peer.port);
       m_peers.push_back(p);
     }

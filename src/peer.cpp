@@ -114,7 +114,6 @@ Peer::run()
       // if they have a piece we want
       int pieceIndex = getFirstAvailablePiece();
       if (pieceIndex >= 0) {
-        log("found piece: " + std::to_string(pieceIndex));
         // if we are choked, send a interested msg
         if (!unchoked) {
           msg::Interested interest;
@@ -288,10 +287,6 @@ Peer::waitOnMessage()
   // next byte is the ID 
   uint8_t id = *(msgBuf+4);
 
-  if (id == msg::MSG_ID_PIECE) {
-    log("Piece recieved, msg length (9 + X): " + std::to_string(length));
-  }
-
   // if there is a body to recieve, wait for it
   if (length > 1) {
     // reallocate the msgBuf to the proper length
@@ -328,7 +323,7 @@ Peer::waitOnMessage()
       log("Unsupported: keep alive message");
       break;
     case msg::MSG_ID_CHOKE:
-      // log("Unsupported: choke message");
+      log("Unsupported: choke message");
       break;
     case msg::MSG_ID_NOT_INTERESTED:
       log("Unsupported: not interested message");
@@ -450,7 +445,6 @@ void Peer::handleRequest(ConstBufferPtr cbf)
 void Peer::handlePiece(ConstBufferPtr cbf)
 {
 
-  log("recieved piece");
   msg::Piece piece;
   piece.decode(cbf);
 
@@ -460,8 +454,6 @@ void Peer::handlePiece(ConstBufferPtr cbf)
   if (!equal(pieceSha1, m_metaInfo->getHashOfPiece(piece.getIndex()))) {
     log("difference in hash");
   } else {
-    log("same hash");
-
     //TODO: check if we have the file?
 
     //write to file
@@ -476,9 +468,9 @@ void Peer::handlePiece(ConstBufferPtr cbf)
     // send have to all peers
     for (auto& peer : *m_peers) {
       peer.sendHave(piece.getIndex());
+      log("sent have to " + peer.getPeerId());
     }
 
-    log("sent have");
   }
 
   requested = false;
@@ -561,8 +553,6 @@ Peer::writeToFile(int pieceIndex, ConstBufferPtr piece)
 
   // write the buffer
   fwrite(piece->buf(), 1, piece->size(), m_clientFile);
-
-  log("piece pos start: " + std::to_string(piecePosStart));
 
   // update bytes downloaded
   // TODO: critical section inside here
