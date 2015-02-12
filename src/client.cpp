@@ -91,6 +91,7 @@ Client::run()
       peer.setClientData(&m_piecesDone, 
                           &m_piecesLocked, 
                           &m_metaInfo, 
+                          &m_peers,
                           m_torrentFile);
 
       peer.handshakeAndRun();

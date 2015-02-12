@@ -17,13 +17,6 @@ public:
         const std::string& ip,
         uint16_t port);
    
-  Peer (const std::string& peerId,
-        const std::string& ip,
-        uint16_t port,
-        std::vector<bool>* clientPiecesDone,
-        std::vector<bool>* clientPiecesLocked,
-        FILE *clientFile);
-
   void
   handshakeAndRun();
 
@@ -99,13 +92,17 @@ public:
   setClientData(std::vector<bool>* clientPiecesDone,
                 std::vector<bool>* clientPiecesLocked,
                 MetaInfo *metaInfo,
+                std::vector<Peer>* peers,
                 FILE *clientFile)
   {
     m_clientPiecesDone = clientPiecesDone;
     m_clientPiecesLocked = clientPiecesLocked;
     m_metaInfo = metaInfo;
+    m_peers = peers;
     m_clientFile = clientFile;
   }
+
+  void sendHave(int pieceIndex);
 
 private:
   std::string m_peerId;    
@@ -144,7 +141,12 @@ private:
   // where LOCKED is either DONE or DOWNLOADING
   std::vector<bool>* m_clientPiecesLocked;
 
+  // keep track of all the other peers,
+  // to send them have messages;
+  std::vector<Peer>* m_peers;
+
   FILE *m_clientFile;
+
 
 private:
   int connectSocket();
@@ -152,7 +154,6 @@ private:
   int getFirstAvailablePiece();
 
   void log(std::string msg);
-  void sendHave(int sock, int pieceIndex);
 
   void handleUnchoke(ConstBufferPtr cbf);
   void handleInterested(ConstBufferPtr cbf);
@@ -165,6 +166,7 @@ private:
   int waitOnBitfield(int size);
   int waitOnMessage();
   int waitOnHandshake();
+  int writeToFile(int pieceIndex, ConstBufferPtr piece);
 };
 
 } // namespace sbt

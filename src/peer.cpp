@@ -27,25 +27,6 @@ namespace sbt {
 {
 }
 
-  Peer::Peer (const std::string& peerId,
-        const std::string& ip,
-        uint16_t port,
-        std::vector<bool>* clientPiecesDone,
-        std::vector<bool>* clientPiecesLocked,
-        FILE *clientFile)
-  : m_peerId(peerId)
-  , m_ip(ip)
-  , m_port(port)
-  , interested(false) 
-  , requested(false) 
-  , unchoked(false) 
-  , unchoking(false) 
-  , m_clientPiecesDone(clientPiecesDone)
-  , m_clientPiecesLocked(clientPiecesLocked)
-  , m_clientFile(clientFile)
-{
-}
-
 void
 Peer::handshakeAndRun()
 {
@@ -275,9 +256,12 @@ Peer::waitOnMessage()
   uint32_t length = ntohl(*reinterpret_cast<uint32_t *> (msgBuf));
   uint32_t msgLength = length+4;
 
-  // std::cout << length << std::endl;
   // next byte is the ID 
   uint8_t id = *(msgBuf+4);
+
+  if (id == msg::MSG_ID_PIECE) {
+    log("Piece recieved, msg length (9 + X): " + std::to_string(length));
+  }
 
   // if there is a body to recieve, wait for it
   if (length > 1) {
@@ -372,8 +356,7 @@ Peer::setBitfield(char *bitfield, int size)
       // std::cout << "found bit: " << to_check << std::endl;
       // std::cout << "found bit (as num) : " << (1 << to_check) << std::endl;
     } else {
-      //TODO: change?
-      m_piecesDone[count] = true;
+      m_piecesDone[count] = false;
       // std::cout << "piece " << count << " needed"<<std::endl;
     }
   }
@@ -445,30 +428,38 @@ void Peer::handlePiece(ConstBufferPtr cbf)
     log("difference in hash");
   } else {
     log("same hash");
-    sendHave(m_sock, piece.getIndex());
+
+    //TODO: check if we have the file?
+
+    //write to file
+    //TODO: warning critical section
+    if (writeToFile(piece.getIndex(), piece.getBlock())) {
+      log("Problem writing to file");
+    } else {
+      log("Successfully wrote to file");
+      (*m_clientPiecesDone)[piece.getIndex()] = true;
+    }
+
+    // send have to all peers
+    for (auto& peer : *m_peers) {
+      peer.sendHave(piece.getIndex());
+    }
+
     log("sent have");
   }
 
   requested = false;
 
-  //TODO: check if we have the file: if not, write it yo!
-
-  //TODO: warning critical section
-  (*m_clientPiecesDone)[piece.getIndex()] = true;
-
-  //TODO: send have 
-
   return;
 }
 
-// input: a socket to send to and a piece index
-// sends a "have" message 
+// sends a "have" message to this peer with the pieceIndex
 void
-Peer::sendHave(int sock, int pieceIndex)
+Peer::sendHave(int pieceIndex)
 {
   msg::Have have(pieceIndex);
   ConstBufferPtr cbf = have.encode();
-  send(sock, cbf->buf(), cbf->size(), 0);
+  send(m_sock, cbf->buf(), cbf->size(), 0);
   return; 
 }
 
@@ -504,6 +495,33 @@ Peer::constructBitfield()
   msg::Bitfield bf_struct(bfstream.buf());
 
   return bf_struct;
+}
+
+// writes the piece index to the file
+int
+Peer::writeToFile(int pieceIndex, ConstBufferPtr piece)
+{
+  if (!m_clientFile) {
+    log("File pointer not open, returning");
+    return -1;
+  }
+
+  if (piece->size() != m_metaInfo->getPieceLength()) {
+    log("Incorrect piece length in writeToFile");
+    return -1;
+  }
+
+  // TODO: write to file lock here
+  // warning: critical section
+  int piecePosStart = pieceIndex * m_metaInfo->getPieceLength();
+  
+  // seek to the correct place in file
+  fseek(m_clientFile, piecePosStart, SEEK_SET);
+
+  // write the buffer
+  fwrite(piece->buf(), 1, piece->size(), m_clientFile);
+
+  return 0;
 }
 
 } // namespace sbt
