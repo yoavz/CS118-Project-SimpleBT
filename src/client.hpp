@@ -65,9 +65,6 @@ public:
     return m_trackerFile;
   }
 
-  static void * 
-  runPeer(void *peer);
-
 private:
   void
   loadMetaInfo(const std::string& torrent);
@@ -86,6 +83,12 @@ private:
 
   void
   log(std::string msg);
+
+  static void 
+  alarmHandler(int sig);
+
+  static void * 
+  runPeer(void *peer);
 
 private:
   MetaInfo m_metaInfo;
@@ -113,6 +116,9 @@ private:
   pthread_mutex_t thread_count_mutex;
   bool isUsed[20] = {0};
   int threadCount;
+
+  // for alarm functionality
+  static bool m_alarm;
 };
 
 } // namespace sbt

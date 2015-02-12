@@ -418,6 +418,7 @@ void Peer::handleRequest(ConstBufferPtr cbf)
 void Peer::handlePiece(ConstBufferPtr cbf)
 {
 
+  log("recieved piece");
   msg::Piece piece;
   piece.decode(cbf);
 

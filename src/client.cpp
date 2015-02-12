@@ -44,9 +44,11 @@
 #include <unistd.h>
 #include <time.h>
 #include <pthread.h>
-
+#include <signal.h>
 
 namespace sbt {
+
+bool Client::m_alarm = false;
 
 Client::Client(const std::string& port, const std::string& torrent)
   : m_interval(3600)
@@ -76,7 +78,6 @@ Client::log(std::string msg)
 void * 
 Client::runPeer(void *peer)
 {
-  std::cout <<" anything?" << std::endl;
   Peer *p = static_cast<Peer *>(peer); 
   std::cout << "(Client): running peer " << p->getPeerId() << std::endl;
   p->handshakeAndRun();
@@ -85,16 +86,28 @@ Client::runPeer(void *peer)
 }
 
 void
+Client::alarmHandler(int sig)
+{
+  if (sig == SIGALRM) 
+    m_alarm = true;
+
+  return;
+}
+
+void
 Client::run()
 {
-
   connectTracker();
   sendTrackerRequest();
   recvTrackerResponse();
 
-  // std::cout << "recieved and parsed tracker resp" << std::endl;
+  // set the alarm to go off after m_interval seconds
+  alarm(m_interval);
 
-  // attempt connecting to all peers - 1 peer
+  // handle the alarm with this function
+  signal(SIGALRM, alarmHandler);
+
+  // attempt connecting to all peers 
   for (auto& peer : m_peers) {
 
       // iterator->first = key
@@ -105,20 +118,41 @@ Client::run()
       if (peerPort == std::to_string(m_clientPort)) 
         continue;
 
-      // set client data
+      // pass references to the peers so that they can modify/access
+      // piecesDone, the file, etc.
       peer.setClientData(&m_piecesDone, 
-                          &m_piecesLocked, 
-                          &m_metaInfo, 
-                          &m_peers,
-                          m_torrentFile);
+                         &m_piecesLocked, 
+                         &m_metaInfo, 
+                         &m_peers,
+                         m_torrentFile);
 
-      log("creating thread");
+      // run a peer in a new thread
       pthread_create(&threads[0], 0, (Client::runPeer), static_cast<void*>(&peer));
-      // peer.handshakeAndRun();
 
       //TODO: remove for multithreading
       //only connect to one peer
       break;
+  }
+
+  while (true) {
+
+    // if alarm went off
+    if (m_alarm) { 
+
+      connectTracker();
+      sendTrackerRequest();
+      recvTrackerResponse();
+
+      // set the alarm to go off after m_interval seconds
+      alarm(m_interval);
+
+      // handle the alarm with this function
+      signal(SIGALRM, alarmHandler);
+
+      m_alarm = false;
+    }
+
+    sleep(0.5);
   }
 }
 
@@ -225,6 +259,8 @@ Client::sendTrackerRequest()
   request.formatRequest(reinterpret_cast<char *>(buffer.buf()));
 
   send(m_trackerSock, buffer.buf(), buffer.size(), 0);
+
+  // log("sent tracker request");
 }
 
 void
@@ -293,6 +329,7 @@ Client::recvTrackerResponse()
 
   close(m_trackerSock);
 
+
   bencoding::Dictionary dict;
 
   std::stringstream tss;
@@ -310,9 +347,11 @@ Client::recvTrackerResponse()
       Peer p(peer.peerId, peer.ip, peer.port);
       m_peers.push_back(p);
     }
+
+    m_isFirstRes = false;
   }
 
-  m_isFirstRes = false;
+  log("Sent/recieved tracker response. next interval: " + std::to_string(m_interval));
 }
 
 // Prepares the destination data file
@@ -354,10 +393,13 @@ Client::prepareFile()
       rewind(m_torrentFile);
 
       char *pBuf = (char *)malloc(sizeof(char) * pieceLength);
+      uint64_t curPieceLength;
 
       for (int i=0; i<pieceCount; i++) {
 
-        fread(pBuf, 1, i == pieceCount-1 ? finalPieceLength : pieceLength, m_torrentFile);
+        curPieceLength = i == pieceCount-1 ? finalPieceLength : pieceLength;
+        if (fread(pBuf, 1, curPieceLength, m_torrentFile) != curPieceLength)
+          log("fread error");
 
         OBufferStream os;
         os.write(pBuf, pieceLength);

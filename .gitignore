@@ -12,3 +12,7 @@ build/
 
 # Compiled python code
 **/*.pyc
+
+# yoavz
+*.swo
+*.swp
