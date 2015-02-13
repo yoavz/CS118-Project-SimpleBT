@@ -136,6 +136,8 @@ Client::acceptPeers(void *c)
 
   log("Listening on sock, waiting for connections...");
 
+  std::vector<int> acceptedThreads = {};
+
   while (true) {
 
     int threadId = -1;
@@ -195,13 +197,12 @@ Client::acceptPeers(void *c)
 
     // run it
     pthread_create(&client->threads[threadId], 0, (Client::runAcceptPeer), static_cast<void*>(&p));
-
+    acceptedThreads.push_back(threadId);
   }
 
-  // TODO: use pthread join?
-  // wait for the children to die
-  while (true) {
-    sleep(1);
+  // wait on children threads to end
+  for (int i : acceptedThreads) {
+    pthread_join(client->threads[i], NULL);
   }
 
 }
@@ -255,11 +256,29 @@ Client::run()
   signal(SIGALRM, alarmHandler);
 
   // setup listening
-  isUsed[1] = true;
-  pthread_create(&threads[1], 0, (Client::acceptPeers), static_cast<void*>(this));
+  isUsed[0] = true;
+  pthread_create(&threads[0], NULL, (Client::acceptPeers), static_cast<void*>(this));
 
   // attempt connecting to all peers 
   for (auto& peer : m_peers) {
+
+      int threadId = -1;
+
+      // check if we have enough threads and grab one 
+      pthread_mutex_lock(&threadLock);
+      for (int i=0; i < MAX_THREAD; i++) {
+        if (!isUsed[i]) {
+          isUsed[i] = true;
+          threadId = i;
+          break;
+        }
+      }
+      pthread_mutex_unlock(&threadLock);
+
+      if (threadId < 0) {
+        log("Not enough threads to support peers");
+        break;
+      }
 
       // iterator->first = key
       // iterator->second = value
@@ -277,8 +296,7 @@ Client::run()
 
       // run a peer in a new thread
       log("starting peer " + peer.getPeerId());
-      isUsed[0] = true;
-      pthread_create(&threads[0], 0, (Client::runHandshakePeer), static_cast<void*>(&peer));
+      pthread_create(&threads[threadId], NULL, (Client::runHandshakePeer), static_cast<void*>(&peer));
   }
 
   while (true) {
