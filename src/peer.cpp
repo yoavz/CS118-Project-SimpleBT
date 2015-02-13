@@ -630,7 +630,7 @@ Peer::writeToFile(int pieceIndex, ConstBufferPtr piece)
 
   // update bytes downloaded
   // TODO: critical section inside here
-  m_metaInfo->increaseBytesDownloaded(m_metaInfo->getPieceLength());
+  m_metaInfo->increaseBytesDownloaded(pieceLength);
 
   return 0;
 }

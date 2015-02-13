@@ -382,6 +382,8 @@ Client::sendTrackerRequest()
   param.setLeft(left); 
   if (m_isFirstReq)
     param.setEvent(TrackerRequestParam::STARTED);
+  if (left <= 0)
+    param.setEvent(TrackerRequestParam::COMPLETED);
 
   // std::string path = m_trackerFile;
   std::string path = m_metaInfo.getAnnounce();
@@ -399,6 +401,11 @@ Client::sendTrackerRequest()
   request.formatRequest(reinterpret_cast<char *>(buffer.buf()));
 
   send(m_trackerSock, buffer.buf(), buffer.size(), 0);
+
+  std::string trackerReq = "uploaded: " + std::to_string(upload) + 
+                           " downloaded: " + std::to_string(download) + 
+                           " left: " + std::to_string(left);
+  log(trackerReq);
 }
 
 void
