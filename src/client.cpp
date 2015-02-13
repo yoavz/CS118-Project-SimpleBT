@@ -236,7 +236,6 @@ Client::run()
   }
 
   while (true) {
-
     // if alarm went off
     if (m_alarm) { 
 
@@ -257,12 +256,13 @@ Client::run()
 
     // check if pieces are done
     if (allPiecesDone()) {
-      log("detected all pieces done");
-      if (m_torrentFile)
+      if (m_torrentFile) {
         fclose(m_torrentFile);
+        m_torrentFile = NULL;
+      }
     }
 
-    sleep(0.5);
+    sleep(1);
   }
 }
 
@@ -517,7 +517,6 @@ Client::prepareFile()
         if (equal(util::sha1(pieceBuf), m_metaInfo.getHashOfPiece(i))) {
           m_piecesDone[i] = true;
           m_piecesLocked[i] = true;
-          // log("piece found: " + std::to_string(i));
         } else {
           m_piecesDone[i] = false;
           m_piecesLocked[i] = false;
