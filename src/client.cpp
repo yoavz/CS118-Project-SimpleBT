@@ -165,7 +165,6 @@ void *
 Client::runHandshakePeer(void *peer)
 {
   Peer *p = static_cast<Peer *>(peer); 
-  std::cout << "(Client): running handshake peer " << p->getPeerId() << std::endl;
   p->handshakeAndRun();
 
   return NULL;
@@ -177,7 +176,6 @@ void *
 Client::runAcceptPeer(void *peer)
 {
   Peer *p = static_cast<Peer *>(peer); 
-  std::cout << "(Client): running accept peer " << p->getPeerId() << std::endl;
   p->respondAndRun();
 
   return NULL;
@@ -199,6 +197,8 @@ Client::run()
   connectTracker();
   sendTrackerRequest();
   recvTrackerResponse();
+
+  log("recieved first tracker response");
 
   // set the alarm to go off after m_interval seconds
   alarm(m_interval);
@@ -226,6 +226,7 @@ Client::run()
                          m_torrentFile);
 
       // run a peer in a new thread
+      log("starting peer " + peer.getPeerId());
       isUsed[0] = true;
       pthread_create(&threads[0], 0, (Client::runHandshakePeer), static_cast<void*>(&peer));
 
@@ -257,8 +258,8 @@ Client::run()
     // check if pieces are done
     if (allPiecesDone()) {
       log("detected all pieces done");
-      fclose(m_torrentFile);
-      return;
+      if (m_torrentFile)
+        fclose(m_torrentFile);
     }
 
     sleep(0.5);
@@ -368,8 +369,6 @@ Client::sendTrackerRequest()
   request.formatRequest(reinterpret_cast<char *>(buffer.buf()));
 
   send(m_trackerSock, buffer.buf(), buffer.size(), 0);
-
-  // log("sent tracker request");
 }
 
 void
@@ -505,23 +504,24 @@ Client::prepareFile()
 
       for (int i=0; i<pieceCount; i++) {
 
-        curPieceLength = i == pieceCount-1 ? finalPieceLength : pieceLength;
-        if (fread(pBuf, 1, curPieceLength, m_torrentFile) != curPieceLength)
-          log("fread error");
+        curPieceLength = (i == pieceCount-1 ? finalPieceLength : pieceLength);
 
-        OBufferStream os;
-        os.write(pBuf, pieceLength);
-        ConstBufferPtr pieceBuf = os.buf();
+        fseek(m_torrentFile, i * m_metaInfo.getPieceLength(), SEEK_SET);
+        if (fread(pBuf, 1, curPieceLength, m_torrentFile) != curPieceLength) {
+          log("fread error");
+          return;
+        }
+
+        ConstBufferPtr pieceBuf = std::make_shared<const Buffer> (pBuf, curPieceLength);
 
         if (equal(util::sha1(pieceBuf), m_metaInfo.getHashOfPiece(i))) {
-          // TODO: whaaa
+          m_piecesDone[i] = true;
+          m_piecesLocked[i] = true;
+          // log("piece found: " + std::to_string(i));
+        } else {
           m_piecesDone[i] = false;
           m_piecesLocked[i] = false;
-        }
-        else {
-          m_piecesDone[i] = false;
-          m_piecesLocked[i] = false;
-          // std::cout << "piece " << i << " bad" << std::endl;
+          // log("piece missing: " + std::to_string(i));
         }
       }
 
