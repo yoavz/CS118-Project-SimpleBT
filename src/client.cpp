@@ -61,7 +61,9 @@ Client::Client(const std::string& port, const std::string& torrent)
   m_clientPort = boost::lexical_cast<uint16_t>(port);
 
   //initialize threads
-  pthread_mutex_init(&thread_count_mutex, NULL);
+  pthread_mutex_init(&threadLock, NULL);
+  pthread_mutex_init(&pieceLock, NULL);
+  pthread_mutex_init(&pieceLock, NULL);
   for (int i=0; i<MAX_THREAD; i++)
     isUsed[i] = false;
 
@@ -139,7 +141,7 @@ Client::acceptPeers(void *c)
     int threadId = -1;
 
     // check if we have enough threads and grab one 
-    pthread_mutex_lock(&client->thread_count_mutex);
+    pthread_mutex_lock(&client->threadLock);
     for (int i=0; i < client->MAX_THREAD; i++) {
       if (!client->isUsed[i]) {
         client->isUsed[i] = true;
@@ -147,7 +149,7 @@ Client::acceptPeers(void *c)
         break;
       }
     }
-    pthread_mutex_unlock(&client->thread_count_mutex);
+    pthread_mutex_unlock(&client->threadLock);
 
     // if no threads are available now
     if (threadId < 0) {
@@ -186,11 +188,20 @@ Client::acceptPeers(void *c)
                     &client->m_piecesLocked, 
                     &client->m_metaInfo, 
                     &client->m_peers,
-                    client->m_torrentFile);
+                    client->m_torrentFile,
+                    &client->pieceLock,
+                    &client->fileLock);
+
 
     // run it
     pthread_create(&client->threads[threadId], 0, (Client::runAcceptPeer), static_cast<void*>(&p));
 
+  }
+
+  // TODO: use pthread join?
+  // wait for the children to die
+  while (true) {
+    sleep(1);
   }
 
 }
@@ -260,16 +271,14 @@ Client::run()
                          &m_piecesLocked, 
                          &m_metaInfo, 
                          &m_peers,
-                         m_torrentFile);
+                         m_torrentFile,
+                         &pieceLock,
+                         &fileLock);
 
       // run a peer in a new thread
       log("starting peer " + peer.getPeerId());
       isUsed[0] = true;
       pthread_create(&threads[0], 0, (Client::runHandshakePeer), static_cast<void*>(&peer));
-
-      //TODO: remove for multithreading
-      //only connect to one peer
-      break;
   }
 
   while (true) {
@@ -560,7 +569,6 @@ Client::prepareFile()
         } else {
           m_piecesDone[i] = false;
           m_piecesLocked[i] = false;
-          // log("piece missing: " + std::to_string(i));
         }
       }
 
@@ -584,7 +592,6 @@ Client::prepareFile()
   return;
 } 
 
-// TODO: critical section
 bool
 Client::allPiecesDone()
 {

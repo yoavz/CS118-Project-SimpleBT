@@ -125,8 +125,11 @@ private:
 
   pthread_t threads[20];
   static const int MAX_THREAD = 20;
-  pthread_mutex_t thread_count_mutex;
   bool isUsed[20] = {0};
+
+  pthread_mutex_t threadLock;
+  pthread_mutex_t pieceLock;
+  pthread_mutex_t fileLock;
 
   // for alarm functionality
   static bool m_alarm;

@@ -20,15 +20,18 @@ Peer::Peer (const std::string& peerId,
 : m_peerId(peerId)
 , m_ip(ip)
 , m_port(port)
+, m_activePiece(-1) 
 , interested(false) 
 , requested(false) 
 , unchoked(false) 
 , unchoking(false) 
 {
+
 }
 
 Peer::Peer (int sockfd)
 : m_sock(sockfd) 
+, m_activePiece(-1) 
 , interested(false) 
 , requested(false) 
 , unchoked(false) 
@@ -38,16 +41,20 @@ Peer::Peer (int sockfd)
 
 void 
 Peer::setClientData(std::vector<bool>* clientPiecesDone,
-              std::vector<bool>* clientPiecesLocked,
-              MetaInfo *metaInfo,
-              std::vector<Peer>* peers,
-              FILE *clientFile)
+                    std::vector<bool>* clientPiecesLocked,
+                    MetaInfo *metaInfo,
+                    std::vector<Peer>* peers,
+                    FILE *clientFile,
+                    pthread_mutex_t *clientPieceLock,
+                    pthread_mutex_t *clientFileLock)
 {
   m_clientPiecesDone = clientPiecesDone;
   m_clientPiecesLocked = clientPiecesLocked;
   m_metaInfo = metaInfo;
   m_peers = peers;
   m_clientFile = clientFile;
+  pieceLock = clientPieceLock;
+  pieceLock = clientFileLock;
 }
 
 // This function responds to the handshake of a 
@@ -57,8 +64,6 @@ Peer::setClientData(std::vector<bool>* clientPiecesDone,
 void
 Peer::respondAndRun()
 {
-  log("in peer");
-
   // wait for a handshake
   if (waitOnHandshake()) {
     // pthread_exit(NULL);
@@ -155,9 +160,11 @@ Peer::run()
       // if we are not waiting on unchoke or piece already 
       if (!interested && !requested)
       {
-        // if they have a piece we want
-        int pieceIndex = getFirstAvailablePiece();
-        if (pieceIndex >= 0) {
+        // if we have not acquired a piece, try finding one
+        if (m_activePiece < 0)
+          getFirstAvailablePiece();
+        
+        if (m_activePiece >= 0) {
           // if we are choked, send a interested msg
           if (!unchoked) {
             msg::Interested interest;
@@ -171,21 +178,21 @@ Peer::run()
           else {
             int pieceLength = m_metaInfo->getPieceLength(); 
             // if it's the final piece, it's a diff length
-            if (pieceIndex == m_metaInfo->getNumPieces()-1) {
+            if (m_activePiece == m_metaInfo->getNumPieces()-1) {
               pieceLength = m_metaInfo->getLength() % m_metaInfo->getPieceLength();
               if (pieceLength == 0)
                 pieceLength = m_metaInfo->getPieceLength();
             }
 
-            msg::Request req(pieceIndex, 0, pieceLength); 
+            msg::Request req(m_activePiece, 0, pieceLength); 
             ConstBufferPtr cbf = req.encode();
             send(m_sock, cbf->buf(), cbf->size(), 0);
 
             requested = true;
-            log("Send request message for piece: " + std::to_string(pieceIndex) + " with length: " + std::to_string(pieceLength));
+            log("Send request message for piece: " + std::to_string(m_activePiece) + " with length: " + std::to_string(pieceLength));
           }
         } else {
-          log("did not find a piece");
+          // no active piece found
         }
       }
     }
@@ -197,18 +204,23 @@ Peer::run()
 // Finds the first available piece to download. If none
 // are found, returns -1
 // Locks the available piece
-// TODO: warning critical section
-int
+void
 Peer::getFirstAvailablePiece()
 {
+  pthread_mutex_lock(pieceLock);
   for (int i=0; i<m_metaInfo->getNumPieces(); i++) 
   {
-    if (!m_clientPiecesDone->at(i) && m_piecesDone.at(i)) {
-      return i;
+    if (!m_clientPiecesLocked->at(i) && m_piecesDone.at(i)) {
+      (*m_clientPiecesLocked)[i] = true;
+      m_activePiece = i;
+      pthread_mutex_unlock(pieceLock);
+      return;
     }
   }
+  pthread_mutex_unlock(pieceLock);
 
-  return -1;
+  log("could not find piece from this peer");
+  return;
 }
 
 int
@@ -297,9 +309,9 @@ Peer::waitOnBitfield(int size)
   }
 
   // length is first four bytes
-  uint32_t length = ntohl(*reinterpret_cast<uint32_t *> (bfBuf));
+  // uint32_t length = ntohl(*reinterpret_cast<uint32_t *> (bfBuf));
   // next byte is the ID 
-  uint8_t id = *(bfBuf+4);
+  // uint8_t id = *(bfBuf+4);
 
   // next bytes are the bitfield
   char *bitfield = bfBuf+5;
@@ -496,17 +508,20 @@ void Peer::handleRequest(ConstBufferPtr cbf)
     // read from file
     char *rBuf = (char *) malloc (sizeof(char)*length);
 
-    // TODO: file lock, critical section
     if (!m_clientFile) {
       log("ERROR: file pointer closed");
       return;
     }
+
+    // critical section: seeking/writing to file
+    pthread_mutex_lock(fileLock);
     fseek(m_clientFile, index * m_metaInfo->getPieceLength() + begin, SEEK_SET);
     if (fread(rBuf, 1, length, m_clientFile) != length) {
       log("fread error");
+      pthread_mutex_unlock(fileLock);
       return;
     }
-    // end critical section
+    pthread_mutex_unlock(fileLock);
 
     // send off the piece
     ConstBufferPtr block = std::make_shared<const Buffer> (rBuf, length);
@@ -532,12 +547,16 @@ void Peer::handlePiece(ConstBufferPtr cbf)
     //TODO: check if we have the file?
 
     //write to file
-    //TODO: warning critical section
     if (writeToFile(piece.getIndex(), piece.getBlock())) {
       log("Problem writing to file");
     } else {
       log("Successfully wrote to file");
+      pthread_mutex_lock(pieceLock);
       (*m_clientPiecesDone)[piece.getIndex()] = true;
+      (*m_clientPiecesLocked)[piece.getIndex()] = true; // just in case
+      pthread_mutex_unlock(pieceLock);
+
+      m_activePiece = -1;
     }
 
     // send have to all peers
@@ -564,7 +583,6 @@ Peer::sendHave(int pieceIndex)
 }
 
 // constructs a bitfield based on the client's current files
-// TODO: WARNING critical section
 msg::Bitfield
 Peer::constructBitfield()
 {
@@ -619,14 +637,14 @@ Peer::writeToFile(int pieceIndex, ConstBufferPtr piece)
     return -1;
   }
 
-  // TODO: write to file lock here
   int piecePosStart = pieceIndex * m_metaInfo->getPieceLength();
 
   // fseek
+  pthread_mutex_lock(fileLock);
   fseek(m_clientFile, piecePosStart, SEEK_SET);
-
   // write the buffer
   fwrite(piece->buf(), 1, piece->size(), m_clientFile);
+  pthread_mutex_unlock(fileLock);
 
   // update bytes downloaded
   // TODO: critical section inside here
@@ -635,7 +653,6 @@ Peer::writeToFile(int pieceIndex, ConstBufferPtr piece)
   return 0;
 }
 
-// TODO: warning critical section
 bool
 Peer::allPiecesDone()
 {

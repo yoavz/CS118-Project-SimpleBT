@@ -95,10 +95,12 @@ public:
 
   void 
   setClientData(std::vector<bool>* clientPiecesDone,
-                std::vector<bool>* clientPiecesLocked,
-                MetaInfo *metaInfo,
-                std::vector<Peer>* peers,
-                FILE *clientFile);
+                    std::vector<bool>* clientPiecesLocked,
+                    MetaInfo *metaInfo,
+                    std::vector<Peer>* peers,
+                    FILE *clientFile,
+                    pthread_mutex_t *clientPieceLock,
+                    pthread_mutex_t *clientFileLock);
 
   void sendHave(int pieceIndex);
 
@@ -108,6 +110,8 @@ private:
   uint16_t m_port;
 
   int m_sock;
+
+  // the piece we are pining after from this peer
   int m_activePiece;
 
   // we have sent an interested msg, not yet recieved
@@ -149,7 +153,7 @@ private:
 private:
   int connectSocket();
 
-  int getFirstAvailablePiece();
+  void getFirstAvailablePiece();
 
   void log(std::string msg);
 
@@ -166,6 +170,9 @@ private:
   int waitOnHandshake();
   int writeToFile(int pieceIndex, ConstBufferPtr piece);
   bool allPiecesDone();
+
+  pthread_mutex_t *pieceLock;
+  pthread_mutex_t *fileLock;
 };
 
 } // namespace sbt
