@@ -14,26 +14,40 @@
 
 namespace sbt {
 
-  Peer::Peer (const std::string& peerId,
-        const std::string& ip,
-        uint16_t port)
-  : m_peerId(peerId)
-  , m_ip(ip)
-  , m_port(port)
-  , interested(false) 
-  , requested(false) 
-  , unchoked(false) 
-  , unchoking(false) 
+Peer::Peer (const std::string& peerId,
+      const std::string& ip,
+      uint16_t port)
+: m_peerId(peerId)
+, m_ip(ip)
+, m_port(port)
+, interested(false) 
+, requested(false) 
+, unchoked(false) 
+, unchoking(false) 
 {
 }
 
-  Peer::Peer (int sockfd)
-  : m_sock(sockfd) 
-  , interested(false) 
-  , requested(false) 
-  , unchoked(false) 
-  , unchoking(false) 
+Peer::Peer (int sockfd)
+: m_sock(sockfd) 
+, interested(false) 
+, requested(false) 
+, unchoked(false) 
+, unchoking(false) 
 {
+}
+
+void 
+Peer::setClientData(std::vector<bool>* clientPiecesDone,
+              std::vector<bool>* clientPiecesLocked,
+              MetaInfo *metaInfo,
+              std::vector<Peer>* peers,
+              FILE *clientFile)
+{
+  m_clientPiecesDone = clientPiecesDone;
+  m_clientPiecesLocked = clientPiecesLocked;
+  m_metaInfo = metaInfo;
+  m_peers = peers;
+  m_clientFile = clientFile;
 }
 
 // This function responds to the handshake of a 
@@ -43,9 +57,40 @@ namespace sbt {
 void
 Peer::respondAndRun()
 {
-  log("Responding to handshake...");
+  log("in peer");
 
-  // socket should be set at this point (by listen)
+  // wait for a handshake
+  if (waitOnHandshake()) {
+    // pthread_exit(NULL);
+    return;
+  } else {
+    log("handshake exchange successfull");
+  }
+
+  // send our handshake
+  msg::HandShake hs(m_metaInfo->getHash(), "SIMPLEBT-TEST-PEERID");
+  ConstBufferPtr hsMsg = hs.encode();
+  send(m_sock, hsMsg->buf(), hsMsg->size(), 0);
+
+  // construct our bitfield (don't send it yet)
+  // we use it's size to know how much bytes to 
+  // wait for on their bitfield
+  msg::Bitfield bf = constructBitfield();
+  ConstBufferPtr bfMsg = bf.encode(); 
+
+  // wait on the bitfield (this fctn also parses the bitfield)
+  if (waitOnBitfield(bfMsg->size())) {
+    // pthread_exit(NULL);
+    return;
+  } else {
+    log("bitfield exchange successfull");
+  }
+
+  // send our bitfield
+  send(m_sock, bfMsg->buf(), bfMsg->size(), 0);
+
+  // run the main peer loop
+  run();
 }
 
 // This function attempts to connect by initiating
@@ -103,49 +148,49 @@ Peer::run()
   {
     // check if all pieces are done
     if (allPiecesDone()) {
-      log("all pieces done");
-      pthread_exit(NULL);
-    }
+      // log("all pieces done");
+      //pthread_exit(NULL);
+    } else {
 
-    // if we are not waiting on unchoke or piece already 
-    if (!interested && !requested)
-    {
-      // if they have a piece we want
-      int pieceIndex = getFirstAvailablePiece();
-      if (pieceIndex >= 0) {
-        // if we are choked, send a interested msg
-        if (!unchoked) {
-          msg::Interested interest;
-          ConstBufferPtr cbf = interest.encode();
-          send(m_sock, cbf->buf(), cbf->size(), 0);
+      // if we are not waiting on unchoke or piece already 
+      if (!interested && !requested)
+      {
+        // if they have a piece we want
+        int pieceIndex = getFirstAvailablePiece();
+        if (pieceIndex >= 0) {
+          // if we are choked, send a interested msg
+          if (!unchoked) {
+            msg::Interested interest;
+            ConstBufferPtr cbf = interest.encode();
+            send(m_sock, cbf->buf(), cbf->size(), 0);
 
-          interested = true;
-          log("Sent interested message"); 
-        }
-        // if not choked, send the request
-        else {
-          int pieceLength = m_metaInfo->getPieceLength(); 
-          // if it's the final piece, it's a diff length
-          if (pieceIndex == m_metaInfo->getNumPieces()-1) {
-            pieceLength = m_metaInfo->getLength() % m_metaInfo->getPieceLength();
-            if (pieceLength == 0)
-              pieceLength = m_metaInfo->getPieceLength();
+            interested = true;
+            log("Sent interested message"); 
           }
+          // if not choked, send the request
+          else {
+            int pieceLength = m_metaInfo->getPieceLength(); 
+            // if it's the final piece, it's a diff length
+            if (pieceIndex == m_metaInfo->getNumPieces()-1) {
+              pieceLength = m_metaInfo->getLength() % m_metaInfo->getPieceLength();
+              if (pieceLength == 0)
+                pieceLength = m_metaInfo->getPieceLength();
+            }
 
-          msg::Request req(pieceIndex, 0, pieceLength); 
-          ConstBufferPtr cbf = req.encode();
-          send(m_sock, cbf->buf(), cbf->size(), 0);
+            msg::Request req(pieceIndex, 0, pieceLength); 
+            ConstBufferPtr cbf = req.encode();
+            send(m_sock, cbf->buf(), cbf->size(), 0);
 
-          requested = true;
-          log("Send request message for piece: " + std::to_string(pieceIndex) + " with length: " + std::to_string(pieceLength));
+            requested = true;
+            log("Send request message for piece: " + std::to_string(pieceIndex) + " with length: " + std::to_string(pieceLength));
+          }
+        } else {
+          log("did not find a piece");
         }
-      } else {
-        log("did not find a piece");
       }
     }
 
     waitOnMessage();
-
   }
 }
 
@@ -319,7 +364,7 @@ Peer::waitOnMessage()
       log("Unsupported: keep alive message");
       break;
     case msg::MSG_ID_CHOKE:
-      log("Unsupported: choke message");
+      // log("Unsupported: choke message");
       break;
     case msg::MSG_ID_NOT_INTERESTED:
       log("Unsupported: not interested message");
@@ -399,7 +444,14 @@ void Peer::handleUnchoke(ConstBufferPtr cbf)
 
 void Peer::handleInterested(ConstBufferPtr cbf)
 {
-  //TODO:
+  log("recieved interested");
+
+  msg::Unchoke unchoke;
+  ConstBufferPtr resp = unchoke.encode();
+  send(m_sock, resp->buf(), resp->size(), 0);
+
+  unchoking = true;
+
   return;
 }
 
@@ -426,16 +478,48 @@ void Peer::handleBitfield(ConstBufferPtr cbf)
 
 void Peer::handleRequest(ConstBufferPtr cbf)
 {
-  // TODO:
-  if (unchoking) {
 
+  msg::Request req;
+  req.decode(cbf);
+
+  int index = req.getIndex();
+  int begin = req.getBegin();
+  int length = req.getLength();
+
+  // TODO: sanity checks that above are valid?
+
+  log("recieved request with index: " + std::to_string(index) +
+      ", begin: " + std::to_string(begin) + ", length: " +
+      std::to_string(length));
+
+  if (unchoking) {
+    // read from file
+    char *rBuf = (char *) malloc (sizeof(char)*length);
+
+    // TODO: file lock, critical section
+    if (!m_clientFile) {
+      log("ERROR: file pointer closed");
+      return;
+    }
+    fseek(m_clientFile, index * m_metaInfo->getPieceLength() + begin, SEEK_SET);
+    if (fread(rBuf, 1, length, m_clientFile) != length) {
+      log("fread error");
+      return;
+    }
+    // end critical section
+
+    // send off the piece
+    ConstBufferPtr block = std::make_shared<const Buffer> (rBuf, length);
+    msg::Piece piece(index, begin, block);
+    ConstBufferPtr resp = piece.encode();
+    send(m_sock, resp->buf(), resp->size(), 0);
   }
+
   return;
 }
 
 void Peer::handlePiece(ConstBufferPtr cbf)
 {
-
   msg::Piece piece;
   piece.decode(cbf);
 
@@ -481,7 +565,6 @@ Peer::sendHave(int pieceIndex)
 
 // constructs a bitfield based on the client's current files
 // TODO: WARNING critical section
-
 msg::Bitfield
 Peer::constructBitfield()
 {
@@ -558,8 +641,9 @@ Peer::allPiecesDone()
 {
   for (int i=0; i<m_metaInfo->getNumPieces(); i++) 
   {
-    if (!m_clientPiecesDone->at(i))
+    if (!m_clientPiecesDone->at(i)) {
       return false;
+    }
   }
 
   return true;

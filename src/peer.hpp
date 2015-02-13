@@ -98,14 +98,7 @@ public:
                 std::vector<bool>* clientPiecesLocked,
                 MetaInfo *metaInfo,
                 std::vector<Peer>* peers,
-                FILE *clientFile)
-  {
-    m_clientPiecesDone = clientPiecesDone;
-    m_clientPiecesLocked = clientPiecesLocked;
-    m_metaInfo = metaInfo;
-    m_peers = peers;
-    m_clientFile = clientFile;
-  }
+                FILE *clientFile);
 
   void sendHave(int pieceIndex);
 
@@ -150,8 +143,8 @@ private:
   // to send them have messages;
   std::vector<Peer>* m_peers;
 
+  std::string m_clientFileName;
   FILE *m_clientFile;
-
 
 private:
   int connectSocket();

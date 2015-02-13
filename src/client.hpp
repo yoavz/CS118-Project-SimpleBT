@@ -81,11 +81,14 @@ private:
   void 
   prepareFile();
 
-  void
+  static void
   log(std::string msg);
 
   static void 
   alarmHandler(int sig);
+
+  static void
+  closeFile(int sig);
 
   static void * 
   runHandshakePeer(void *peer);
@@ -114,7 +117,6 @@ private:
   bool m_isFirstReq;
   bool m_isFirstRes;
 
-  FILE *m_torrentFile;
   std::vector<bool> m_piecesDone;
   std::vector<bool> m_piecesLocked;
 
@@ -128,6 +130,7 @@ private:
 
   // for alarm functionality
   static bool m_alarm;
+  static FILE *m_torrentFile;
 };
 
 } // namespace sbt

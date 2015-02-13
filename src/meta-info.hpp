@@ -131,6 +131,7 @@ public:
   increaseBytesDownloaded(int bytes)
   {
     bytesDownloaded += bytes;
+    bytesLeft -= bytes;
   }
 
   int
@@ -143,6 +144,18 @@ public:
   increaseBytesUploaded(int bytes)
   {
     bytesUploaded += bytes;
+  }
+
+  int
+  getBytesLeft()
+  {
+    return bytesLeft;
+  }
+
+  void
+  setBytesLeft(int bytes)
+  {
+    bytesLeft = bytes;
   }
 
 private:
@@ -160,6 +173,7 @@ private:
 
   int bytesUploaded;
   int bytesDownloaded; 
+  int bytesLeft;
 };
 
 } // namespace sbt

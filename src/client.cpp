@@ -49,6 +49,7 @@
 namespace sbt {
 
 bool Client::m_alarm = false;
+FILE *Client::m_torrentFile = NULL;
 
 Client::Client(const std::string& port, const std::string& torrent)
   : m_interval(3600)
@@ -58,6 +59,18 @@ Client::Client(const std::string& port, const std::string& torrent)
   srand(time(NULL));
 
   m_clientPort = boost::lexical_cast<uint16_t>(port);
+
+  //initialize threads
+  pthread_mutex_init(&thread_count_mutex, NULL);
+  for (int i=0; i<MAX_THREAD; i++)
+    isUsed[i] = false;
+
+  //set signals to close file on termination
+  signal(SIGTERM, closeFile);
+  signal(SIGINT, closeFile);
+  signal(SIGQUIT, closeFile);
+  signal(SIGKILL, closeFile);
+  signal(SIGHUP, closeFile);
 
   loadMetaInfo(torrent);
   std::cout << "loaded metainfo" << std::endl;
@@ -72,6 +85,17 @@ Client::log(std::string msg)
   std::cout << "(Client): " << msg << std::endl;
 }
 
+void
+Client::closeFile(int signo)
+{
+  log("closing file");
+  if (m_torrentFile) {
+    fclose(m_torrentFile);
+    m_torrentFile = NULL;
+  }
+  return;
+}
+
 void *
 Client::acceptPeers(void *c)
 {
@@ -79,7 +103,7 @@ Client::acceptPeers(void *c)
   // must recover the class instance
   Client *client = static_cast<Client *>(c);
 
-  client->log("Attempting to accept peers...");
+  log("Attempting to accept peers...");
 
   // create a TCP socket
   client->m_listeningSock = socket(AF_INET, SOCK_STREAM, 0);
@@ -94,7 +118,7 @@ Client::acceptPeers(void *c)
   // bind address to socket
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(40000);
+  addr.sin_port = htons(client->m_clientPort);
   addr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
   memset(addr.sin_zero, '\0', sizeof(addr.sin_zero));
   if (bind(client->m_listeningSock, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
@@ -108,12 +132,11 @@ Client::acceptPeers(void *c)
     return NULL;
   }
 
-  client->log("Listening on sock");
+  log("Listening on sock, waiting for connections...");
 
   while (true) {
 
-    int threadId;
-    bool foundThread = false;
+    int threadId = -1;
 
     // check if we have enough threads and grab one 
     pthread_mutex_lock(&client->thread_count_mutex);
@@ -121,21 +144,17 @@ Client::acceptPeers(void *c)
       if (!client->isUsed[i]) {
         client->isUsed[i] = true;
         threadId = i;
-        foundThread = true;
-        client->log("grabbed thread " + std::to_string(threadId));
         break;
       }
     }
     pthread_mutex_unlock(&client->thread_count_mutex);
 
-
-    // if no threads are found
-    if (!foundThread) {
-      sleep(1);
+    // if no threads are available now
+    if (threadId < 0) {
+      log("ran out of threads");
+      usleep(500000);
       continue;
     }
-
-    client->log("accept()...");
 
     // wait for a connection with accept()
     struct sockaddr_in clientAddr;
@@ -147,16 +166,33 @@ Client::acceptPeers(void *c)
       return NULL;
     }
 
+    // if (clientAddr.sin_family != AF_INET) {
+    //   log("skipping address");
+    //   client->isUsed[threadId] = false;
+    //   close(clientSockfd);
+    //   continue;
+    // }
+
     char ipstr[INET_ADDRSTRLEN] = {'\0'};
     inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
-    client->log("Accepted a connection from: " + std::string(ipstr) + ":" + std::to_string(ntohs(clientAddr.sin_port)));
+    log("Accepted a connection from: " + std::string(ipstr) + ":" + std::to_string(ntohs(clientAddr.sin_port)));
 
-    // initialize a peer and run it 
+    // initialize a peer
     Peer p(clientSockfd);
+
+    // pass references to the peers so that they can modify/access
+    // piecesDone, the file, etc.
+    p.setClientData(&client->m_piecesDone, 
+                    &client->m_piecesLocked, 
+                    &client->m_metaInfo, 
+                    &client->m_peers,
+                    client->m_torrentFile);
+
+    // run it
     pthread_create(&client->threads[threadId], 0, (Client::runAcceptPeer), static_cast<void*>(&p));
 
   }
-  
+
 }
 
 // this function should be called from pthread_create
@@ -175,6 +211,7 @@ Client::runHandshakePeer(void *peer)
 void * 
 Client::runAcceptPeer(void *peer)
 {
+  log("run accept peer");
   Peer *p = static_cast<Peer *>(peer); 
   p->respondAndRun();
 
@@ -207,8 +244,8 @@ Client::run()
   signal(SIGALRM, alarmHandler);
 
   // setup listening
-  // isUsed[1] = true;
-  // pthread_create(&threads[1], 0, (Client::acceptPeers), static_cast<void*>(this));
+  isUsed[1] = true;
+  pthread_create(&threads[1], 0, (Client::acceptPeers), static_cast<void*>(this));
 
   // attempt connecting to all peers 
   for (auto& peer : m_peers) {
@@ -254,15 +291,8 @@ Client::run()
       m_alarm = false;
     }
 
-    // check if pieces are done
-    if (allPiecesDone()) {
-      if (m_torrentFile) {
-        fclose(m_torrentFile);
-        m_torrentFile = NULL;
-      }
-    }
-
-    sleep(1);
+    // sleep for 0.5 sec
+    usleep(500000);
   }
 }
 
@@ -341,7 +371,7 @@ Client::sendTrackerRequest()
 
   int upload = m_metaInfo.getBytesUploaded();
   int download = m_metaInfo.getBytesDownloaded();
-  int left = m_metaInfo.getLength() - download;
+  int left = m_metaInfo.getBytesLeft(); 
 
   param.setInfoHash(m_metaInfo.getHash());
   param.setPeerId("SIMPLEBT-TEST-PEERID");
@@ -492,6 +522,8 @@ Client::prepareFile()
   m_torrentFile = (FILE*)malloc(sizeof(FILE));
   m_torrentFile = fopen (torrentFileName.c_str(), "r");
 
+  int bytesLeft = m_metaInfo.getLength();
+
   // if file exists 
   if (m_torrentFile != NULL) {
     fseek(m_torrentFile, 0, SEEK_END);
@@ -517,12 +549,17 @@ Client::prepareFile()
         if (equal(util::sha1(pieceBuf), m_metaInfo.getHashOfPiece(i))) {
           m_piecesDone[i] = true;
           m_piecesLocked[i] = true;
+          bytesLeft -= curPieceLength;
         } else {
           m_piecesDone[i] = false;
           m_piecesLocked[i] = false;
           // log("piece missing: " + std::to_string(i));
         }
       }
+
+      log("bytes left: " + std::to_string(bytesLeft));
+      m_metaInfo.setBytesLeft(bytesLeft);
+      fseek(m_torrentFile, 0, SEEK_SET);
 
       return;
     } 
@@ -533,6 +570,9 @@ Client::prepareFile()
   m_torrentFile = fopen(torrentFileName.c_str(), "w+");
   fseek(m_torrentFile, fileLength-1, SEEK_SET);
   fputc(0, m_torrentFile);
+
+  log("bytes left: " + std::to_string(bytesLeft));
+  m_metaInfo.setBytesLeft(bytesLeft);
 
   return;
 } 
