@@ -170,12 +170,12 @@ Client::acceptPeers(void *c)
       return NULL;
     }
 
-    // if (clientAddr.sin_family != AF_INET) {
-    //   log("skipping address");
-    //   client->isUsed[threadId] = false;
-    //   close(clientSockfd);
-    //   continue;
-    // }
+    if (clientAddr.sin_family != AF_INET) {
+      log("skipping address");
+      client->isUsed[threadId] = false;
+      close(clientSockfd);
+      continue;
+    }
 
     char ipstr[INET_ADDRSTRLEN] = {'\0'};
     inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
@@ -223,7 +223,6 @@ Client::runHandshakePeer(void *peer)
 void * 
 Client::runAcceptPeer(void *peer)
 {
-  log("run accept peer");
   Peer *p = static_cast<Peer *>(peer); 
   p->respondAndRun();
 
@@ -239,6 +238,52 @@ Client::alarmHandler(int sig)
   return;
 }
 
+int
+Client::addPeer(Peer *peer)
+{
+  if (peerRunning(peer->getPort())) {
+    return -1;
+  }
+
+  int threadId = -1;
+
+  // check if we have enough threads and grab one 
+  pthread_mutex_lock(&threadLock);
+  for (int i=0; i < MAX_THREAD; i++) {
+    if (!isUsed[i]) {
+      isUsed[i] = true;
+      threadId = i;
+      break;
+    }
+  }
+  pthread_mutex_unlock(&threadLock);
+
+  if (threadId < 0) {
+    log("Not enough threads to support peers");
+    return -1;
+  }
+
+  // iterator->first = key
+  // iterator->second = value
+  // Repeat if you also want to iterate through the second map.
+
+  // pass references to the peers so that they can modify/access
+  // piecesDone, the file, etc.
+  peer->setClientData(&m_piecesDone, 
+                      &m_piecesLocked, 
+                      &m_metaInfo, 
+                      &m_peers,
+                      m_torrentFile,
+                      &pieceLock,
+                      &fileLock);
+
+  // run a peer in a new thread
+  // log("starting peer " + peer->getPeerId());
+  m_portsRunning.push_back(peer->getPort());
+  pthread_create(&threads[threadId], NULL, (Client::runHandshakePeer), static_cast<void*>(peer));
+
+  return 0;
+}
 
 void
 Client::run()
@@ -246,8 +291,6 @@ Client::run()
   connectTracker();
   sendTrackerRequest();
   recvTrackerResponse();
-
-  log("recieved first tracker response");
 
   // set the alarm to go off after m_interval seconds
   alarm(m_interval);
@@ -259,50 +302,16 @@ Client::run()
   isUsed[0] = true;
   pthread_create(&threads[0], NULL, (Client::acceptPeers), static_cast<void*>(this));
 
-  // attempt connecting to all peers 
-  for (auto& peer : m_peers) {
-
-      int threadId = -1;
-
-      // check if we have enough threads and grab one 
-      pthread_mutex_lock(&threadLock);
-      for (int i=0; i < MAX_THREAD; i++) {
-        if (!isUsed[i]) {
-          isUsed[i] = true;
-          threadId = i;
-          break;
-        }
-      }
-      pthread_mutex_unlock(&threadLock);
-
-      if (threadId < 0) {
-        log("Not enough threads to support peers");
-        break;
-      }
-
-      // iterator->first = key
-      // iterator->second = value
-      // Repeat if you also want to iterate through the second map.
-
-      // pass references to the peers so that they can modify/access
-      // piecesDone, the file, etc.
-      peer.setClientData(&m_piecesDone, 
-                         &m_piecesLocked, 
-                         &m_metaInfo, 
-                         &m_peers,
-                         m_torrentFile,
-                         &pieceLock,
-                         &fileLock);
-
-      // run a peer in a new thread
-      log("starting peer " + peer.getPeerId());
-      pthread_create(&threads[threadId], NULL, (Client::runHandshakePeer), static_cast<void*>(&peer));
-  }
+  // attempt connecting to all peers from the first request
 
   while (true) {
+
+    for (auto& peer : m_peers) {
+      addPeer(&peer);
+    }
+
     // if alarm went off
     if (m_alarm) { 
-
       connectTracker();
       sendTrackerRequest();
       recvTrackerResponse();
@@ -512,10 +521,9 @@ Client::recvTrackerResponse()
   std::vector<PeerInfo> infos = trackerResponse.getPeers();
   m_interval = trackerResponse.getInterval();
 
+  // if it's the first request, just add to the peer list
   if (m_isFirstRes) {
     for (const auto& peer : infos) {
-      std::cout << peer.ip << ":" << peer.port << std::endl;
-
       // if it's the client, skip
       if (peer.port == m_clientPort) 
         continue;
@@ -525,6 +533,22 @@ Client::recvTrackerResponse()
     }
 
     m_isFirstRes = false;
+  }
+
+  else {
+
+    for (const auto& peer : infos) {
+      // if it's the client, skip
+      if (peer.port == m_clientPort) 
+        continue;
+
+      if (peerRunning(peer.port))
+        continue;
+
+      Peer p(peer.peerId, peer.ip, peer.port);
+
+      m_peers.push_back(p);
+    }
   }
 
 }
@@ -620,6 +644,21 @@ Client::allPiecesDone()
   }
 
   return true;
+}
+
+bool
+Client::peerRunning(uint16_t port)
+{
+  for (std::vector<uint16_t>::iterator it = m_portsRunning.begin();
+       it != m_portsRunning.end();
+       it++)
+  {
+    if (port == *it) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 } // namespace sbt

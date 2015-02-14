@@ -102,6 +102,12 @@ private:
   bool
   allPiecesDone();
 
+  int
+  addPeer(Peer *peer);
+
+  bool
+  peerRunning(uint16_t port);
+
 private:
   MetaInfo m_metaInfo;
   std::string m_trackerHost;
@@ -122,6 +128,7 @@ private:
 
   // list of peers (from tracker)
   std::vector<Peer> m_peers;
+  std::vector<uint16_t> m_portsRunning;
 
   pthread_t threads[20];
   static const int MAX_THREAD = 20;

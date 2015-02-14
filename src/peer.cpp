@@ -14,8 +14,8 @@
 
 namespace sbt {
 
-Peer::Peer (const std::string& peerId,
-      const std::string& ip,
+Peer::Peer (std::string peerId,
+      std::string ip,
       uint16_t port)
 : m_peerId(peerId)
 , m_ip(ip)
@@ -376,7 +376,7 @@ Peer::waitOnMessage()
       log("Unsupported: keep alive message");
       break;
     case msg::MSG_ID_CHOKE:
-      // log("Unsupported: choke message");
+      log("Unsupported: choke message");
       break;
     case msg::MSG_ID_NOT_INTERESTED:
       log("Unsupported: not interested message");
@@ -559,11 +559,12 @@ void Peer::handlePiece(ConstBufferPtr cbf)
       m_activePiece = -1;
     }
 
+    // TODO: add pack
     // send have to all peers
-    for (auto& peer : *m_peers) {
-      peer.sendHave(piece.getIndex());
-      log("sent have to " + peer.getPeerId());
-    }
+    // for (auto& peer : *m_peers) {
+    //   peer.sendHave(piece.getIndex());
+    //   log("sent have to " + peer.getPeerId());
+    // }
 
   }
 

@@ -13,8 +13,8 @@ namespace sbt {
 class Peer 
 {
 public:
-  Peer (const std::string& peerId,
-        const std::string& ip,
+  Peer (std::string peerId,
+        std::string ip,
         uint16_t port);
 
   Peer (int sockfd);
@@ -45,7 +45,7 @@ public:
     m_sock = sock;
   }
 
-  const std::string&
+  std::string
   getPeerId()
   {
     return m_peerId;
