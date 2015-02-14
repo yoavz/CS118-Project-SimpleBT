@@ -73,7 +73,7 @@ Peer::respondAndRun()
   }
 
   // send our handshake
-  msg::HandShake hs(m_metaInfo->getHash(), "SIMPLEBT-TEST-PEERID");
+  msg::HandShake hs(m_metaInfo->getHash(), "SIMPLEBT.TEST.PEERID");
   ConstBufferPtr hsMsg = hs.encode();
   send(m_sock, hsMsg->buf(), hsMsg->size(), 0);
 
@@ -117,7 +117,7 @@ Peer::handshakeAndRun()
   }
 
   // send our handshake
-  msg::HandShake hs(m_metaInfo->getHash(), "SIMPLEBT-TEST-PEERID");
+  msg::HandShake hs(m_metaInfo->getHash(), "SIMPLEBT.TEST.PEERID");
   ConstBufferPtr hsMsg = hs.encode();
   send(m_sock, hsMsg->buf(), hsMsg->size(), 0);
 
@@ -561,10 +561,10 @@ void Peer::handlePiece(ConstBufferPtr cbf)
 
     // TODO: add pack
     // send have to all peers
-    // for (auto& peer : *m_peers) {
-    //   peer.sendHave(piece.getIndex());
-    //   log("sent have to " + peer.getPeerId());
-    // }
+    for (auto& peer : *m_peers) {
+      peer.sendHave(piece.getIndex());
+      log("sent have to " + peer.getPeerId());
+    }
 
   }
 

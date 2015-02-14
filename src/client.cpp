@@ -410,7 +410,7 @@ Client::sendTrackerRequest()
   int left = m_metaInfo.getBytesLeft(); 
 
   param.setInfoHash(m_metaInfo.getHash());
-  param.setPeerId("SIMPLEBT-TEST-PEERID");
+  param.setPeerId("SIMPLEBT.TEST.PEERID");
   param.setIp("127.0.0.1"); 
   param.setPort(m_clientPort); 
   param.setUploaded(upload);
