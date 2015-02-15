@@ -201,9 +201,12 @@ Client::acceptPeers(void *c)
   }
 
   // wait on children threads to end
-  for (int i : acceptedThreads) {
-    pthread_join(client->threads[i], NULL);
+  while (true) {
+    usleep(500000);
   }
+  // for (int i : acceptedThreads) {
+  //   pthread_join(client->threads[i], NULL);
+  // }
 
 }
 

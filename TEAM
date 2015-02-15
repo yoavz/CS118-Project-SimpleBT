@@ -1,3 +1,11 @@
+Part 1
+------
+
 Yoav Zimmerman wrote the code that parses the torrent file and constructs the GET request from the announcer information.
 Noah Hadfield-Menell wrote the URL parsing and serializing module for extracting the host and encoded the GET request path.
 Together, we wrote the code that sends request to the tracker over sockets.
+
+Part 2
+------
+
+This entire project was spent pair programming, so all of the codebase was written together by Yoav Zimmerman and Noah Hadfield-Menell. The total amount of time put in to part 2 of this project totaled to approximately 30 hours. The algorithm was revised several times and the codebase went through several refactorings to support multithreading. All the test cases supplied pass successfully in it's current finished form.
